@@ -20,7 +20,7 @@ script:
 after_success:
   - cd ./public
   - git init
-  - git checkout gh-pages
+  - git checkout --orphan gh-pages
   - git add -A
   - git commit -m "Travis CI Auto Builder"
   - git push --quiet --force https://$GITHUB_REPO_TOKEN@github.com/breeze2/blog gh-pages
