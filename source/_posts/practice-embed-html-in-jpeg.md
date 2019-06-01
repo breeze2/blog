@@ -100,7 +100,7 @@ embedHtmlInJpeg('lena.jpg',
 
 ## 这张图片是一个网页，不信你就在新标签页中打开它
 
-<a href="https://breeze2.github.io/blog/assets/images/practice-embed-html-in-jpeg4.html" target="_blank">![Lena](/assets/images/practice-embed-html-in-jpeg4.html)</a>
+<a href="https://breeze2.github.io/blog/practice-embed-html-in-jpeg4.html" target="_blank">![Lena](/practice-embed-html-in-jpeg4.html)</a>
 
 ## 实际应用
 将一段HTML文本嵌入到一张图片中，实际上，还没什么应用，哈哈哈😂。
