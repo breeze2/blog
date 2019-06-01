@@ -15,9 +15,11 @@ before_install:
 install:
   - npm i
 script:
+  - cp ./_theme_config.yml ./theme/next/_config.yml
   - hexo clean
   - hexo generate
 after_success:
+  - cp ./public/assets/images/practice-embed-html-in-jpeg4.jpg ./public/assets/images/practice-embed-html-in-jpeg4.html
   - cd ./public
   - git init
   - git checkout --orphan gh-pages
