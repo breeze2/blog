@@ -15,9 +15,7 @@ before_install:
 install:
   - npm i
 script:
-  - git submodule sync
-  - ls ./themes
-  - cp ./_theme_config.yml ./theme/next/_config.yml
+  - cp ./_theme_config.yml ./themes/next/_config.yml
   - hexo clean
   - hexo generate
 after_success:
