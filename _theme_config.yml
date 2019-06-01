@@ -39,13 +39,13 @@ favicon:
   medium: /assets/images/favicon.ico
   apple_touch_icon: /assets/images/favicon.ico
   safari_pinned_tab: /assets/images/favicon.ico
-  android_manifest: /assets/images/favicon.ico
-  ms_browserconfig: /assets/images/favicon.ico
+  # android_manifest: /assets/images/favicon.ico
+  # ms_browserconfig: /assets/images/favicon.ico
 
 # Set rss to false to disable feed link.
 # Leave rss as blank to use site's feed link, and install hexo-generator-feed: `npm install hexo-generator-feed --save`.
 # Set rss to specific value if you have burned your feed already.
-rss:
+rss: /atom.xml
 
 footer:
   # Specify the date when the site was setup. If not defined, current year will be used.
@@ -158,10 +158,10 @@ baidu_push: false
 # External url should start with http:// or https://
 menu:
   home: / || home
-  #about: /about/ || user
-  #tags: /tags/ || tags
-  #categories: /categories/ || th
-  archives: /archives/ || archive
+  about: /about/ || user
+  tags: /tags/ || tags
+  categories: /categories/ || th
+  # archives: /archives/ || archive
   #schedule: /schedule/ || calendar
   #sitemap: /sitemap.xml || sitemap
   #commonweal: /404/ || heartbeat
