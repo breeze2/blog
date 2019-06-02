@@ -26,6 +26,3 @@ after_success:
   - git add -A
   - git commit -m "Travis CI Auto Builder"
   - git push --quiet --force https://$GITHUB_REPO_TOKEN@github.com/breeze2/blog gh-pages
-env:
-  global:
-    secure: BIYRoTnmANC3C4g8wc25qNgG2iUooqMf4LmjSMh+WO0o7j/nGcpXGujOvRNkzrftBRM+h5RC8jYwdaJ+aARnsxyF2Y37Hdo9oF4acpzQNAWGd0847WMvcaFtB5wg9Q2yj6zbvQ+Qp2E6RJaJXk/v1JhePdxpoCWPnNgYFaHD7eLrtDt3UHlnkYtoi37iHxwpMT4Wr8E/DAO5hM1Fol/E1ViPX9TGcxgZsHGQhoujU54/Ab4ImCfqbtG+QGFr3KkMbQrK/CjP0fOetuXhGK6m2k6qnLJ0AiFZ32Psq4qILgAcMSsx2NbtSeFY9IK4/oltwNlW8i7+DIPEKPu/wFREeraX1To56NZGeK1Y1YVP5LB3UkJ+CjklEm+nMLAp4VG+Z2DlGwArqE44bxK5UTABS9pnSzYwNi8dRZmykF6OCsrqk9JiAfwD+hK6+KD/iULWSiJ//eeVLJmnKFNTQhXTKsGDp69MvfAcjyIWw0l3AOwma1rSkob3aRR/U7r/Vn+LyQ7fSpC+KBn7zveQRvgBAQ7RNGI/VKXvL/2SIPe/nae7yHuYZjlxzYIp0Pw7rDqkJe5Vfg4atP0zxk6KLO54iE5MJpOdSr0XRLuu1ImfIVYEPIDjZZ/0ctoBGlHRJ497q+/FNGcH9Y+LAr6hTB02mgkjEAF4frKmvOQBqxazBdA=
