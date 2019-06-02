@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/blog/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/blog/assets/images/favicon.ico?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="很多网站都会有上传文件的功能，比如上传用户头像，上传个人简历等等，除非是网盘类的网站，一般上传文件不会作为网站的主要功能；而且，如今大众的网速已经是足够的快，上传几百KB的文件，几乎可以秒内完成。所以，大多数网站，对于上传文件的处理，都是简单的前端POST上传，后端验证存放然后返回访问地址。毕竟，文件小，网速快，一瞬间的事情谁会多在意呢？   存在问题假设我们有一个网站，基于NginX+PHP+J">
+<meta name="keywords" content="js,scheme,php,nginx">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP文件上传的一个后端完善方案（NginX）">
+<meta property="og:url" content="https://breeze2.github.io/blog/scheme-nginx-php-js-upload-process.html">
+<meta property="og:site_name" content="Lin Blog">
+<meta property="og:description" content="很多网站都会有上传文件的功能，比如上传用户头像，上传个人简历等等，除非是网盘类的网站，一般上传文件不会作为网站的主要功能；而且，如今大众的网速已经是足够的快，上传几百KB的文件，几乎可以秒内完成。所以，大多数网站，对于上传文件的处理，都是简单的前端POST上传，后端验证存放然后返回访问地址。毕竟，文件小，网速快，一瞬间的事情谁会多在意呢？   存在问题假设我们有一个网站，基于NginX+PHP+J">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HTTP文件上传的一个后端完善方案（NginX）">
+<meta name="twitter:description" content="很多网站都会有上传文件的功能，比如上传用户头像，上传个人简历等等，除非是网盘类的网站，一般上传文件不会作为网站的主要功能；而且，如今大众的网速已经是足够的快，上传几百KB的文件，几乎可以秒内完成。所以，大多数网站，对于上传文件的处理，都是简单的前端POST上传，后端验证存放然后返回访问地址。毕竟，文件小，网速快，一瞬间的事情谁会多在意呢？   存在问题假设我们有一个网站，基于NginX+PHP+J">
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://breeze2.github.io/blog/scheme-nginx-php-js-upload-process">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>HTTP文件上传的一个后端完善方案（NginX） | Lin Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lin Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">林柏格</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://breeze2.github.io/blog/blog/scheme-nginx-php-js-upload-process.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="林毅锋">
+      <meta itemprop="description" content="阿牛不说话">
+      <meta itemprop="image" content="/blog/assets/images/Breeze.JPG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lin Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">HTTP文件上传的一个后端完善方案（NginX）
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2017-08-12 14:08:30" itemprop="dateCreated datePublished" datetime="2017-08-12T14:08:30Z">2017-08-12</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/blog/categories/方案/" itemprop="url" rel="index"><span itemprop="name">方案</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>很多网站都会有上传文件的功能，比如上传用户头像，上传个人简历等等，除非是网盘类的网站，一般上传文件不会作为网站的主要功能；而且，如今大众的网速已经是足够的快，上传几百KB的文件，几乎可以秒内完成。所以，大多数网站，对于上传文件的处理，都是简单的前端POST上传，后端验证存放然后返回访问地址。毕竟，文件小，网速快，一瞬间的事情谁会多在意呢？</p>
+<!-- 但是，如果用户要上传的文件大小有几十MB，正常网速上传，过程也要几十秒的话，那么在这个几十秒内怎么告知用户上传的进度呢？在这个几十秒内服务器又能承载多少个用户的全速上传呢？怎样拒绝百MB或者更大的文件上传呢？等等这些问题都需要我们多在意。 -->
+
+<h2 id="存在问题"><a href="#存在问题" class="headerlink" title="存在问题"></a>存在问题</h2><p>假设我们有一个网站，基于NginX+PHP+JS构架，网站允许用户上传一些小视频、音乐或者PPT等文件在线上展示，单个文件大小限制不超过30MB，那么我们要怎样实现这个上传功能呢？</p>
+<a id="more"></a>
+
+<h3 id="限制上传文件的大小"><a href="#限制上传文件的大小" class="headerlink" title="限制上传文件的大小"></a>限制上传文件的大小</h3><p>首先，NginX要能接受最大32MB的请求（除了最大文件本身30MB，再预留一些给其他请求参数），我们会修改网站的虚拟主机配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># website.conf</span><br><span class="line">server&#123;</span><br><span class="line">    client_max_body_size 32M; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后，PHP也要修改配置，接受最大30MB的文件上传和最大32MB的POST请求：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># php.ini</span></span><br><span class="line"><span class="attr">upload_max_filesize</span> = <span class="number">30</span>M<span class="comment">;</span></span><br><span class="line"><span class="attr">post_max_size</span> = <span class="number">32</span>M<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>其实，单凭<code>client_max_body_size</code>，NginX是不能真正限制上传文件大小的，因为NginX会先让客户端（一般是浏览器）开始上传请求，直到上传的内容大小超过了限制，NginX才会中止上传，报<code>413 Request Entity Too Large</code>错误，没超过限制则交给PHP处理。<br>于是，PHP的<code>upload_max_filesize</code>和<code>post_max_size</code>就更没用了，因为PHP获取到文件信息的时候，上传过程已经结束了（这时当然是上传成功，NginX中止请求的话PHP不会进场）。在NginX传递请求结果前，PHP什么（比如验证用户，验证权限等等）都做不了。</p>
+<p>如果用户上传了一个大于32MB的时候，直到上传到32MB的时候才能告诉用户文件过大了，那么前面的时间用户不就白等了吗？而且服务器的带宽还是一样被消耗了。我们更希望在上传开始前就能告诉用户文件过大了。很多网站开发，都会把这一步交给JS处理，在新型浏览器(支持HTML5)里，JS的确可以获取input文件的大小；在旧的IE里，也可以通过ActiveX来实现。但是JS的限制处理很容易被绕过去，只要知道上传地址，一个<code>form</code>标签就能把文件传过去：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;form id=&quot;upload_form&quot; action=&quot;/path/to/upload&quot; enctype=&quot;multipart/form-data&quot; method=&quot;post&quot;&gt;</span><br><span class="line">    &lt;input type=&quot;file&quot; name=&quot;upload_file&quot; value=&quot;/path/of/big/big/file&quot; /&gt;</span><br><span class="line">    &lt;input type=&quot;submit&quot; value=&quot;Upload&quot; /&gt;</span><br><span class="line">&lt;/form&gt;</span><br></pre></td></tr></table></figure>
+
+<p>正常的用户当然不会这样做，但是有意攻击网站的人会。</p>
+<h3 id="限制上传文件的速度"><a href="#限制上传文件的速度" class="headerlink" title="限制上传文件的速度"></a>限制上传文件的速度</h3><p>如果服务器的入口带宽是100mbps，用户的上行带宽是10mbps，用户上传一个30MB的文件至少需要30秒，那么在30秒内，服务器的带宽只能满足10个用户上传文件，带宽被占满后，服务器就很难再处理其他请求了。所以，限制用户上传文件的速度就很有必要。目前，JS做不到限制上传文件的速度，PHP也做不到。</p>
+<h3 id="上传文件的进度"><a href="#上传文件的进度" class="headerlink" title="上传文件的进度"></a>上传文件的进度</h3><p>用户上传一个30MB的文件至少需要30秒，那么30秒内应该告知用户上传的进度，不能让用户无感知的等待。HTML5改进了XMLHttpRequest对象，在支持HTML5的新型浏览器里，JS可以获取XMLHttpRequest上传文件的进度；在旧的浏览器的也可以通过Flash与JS结合（比如SWFUpload），从而获取上传文件的进度。但是新型浏览器里，Flash已经被摒弃了，因而要支持新旧浏览器，JS就要写成两套代码。在这里PHP也是帮不上忙，因为PHP拿到传文件信息的时候，上传已经结束了。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>网站是NginX+PHP+JS构架的，PHP和JS解决不了的问题，那应该在NginX上解决它。NginX虽然是一个现成的软件，但是它还是可以继续扩展和修改的。NginX本身没有提供上传文件的复杂处理功能，而在NginX官方认可的第三方扩展模块里，有两个模块可以帮助我们实现复杂的上传文件功能，分别是<a href="https://github.com/vkholodkov/nginx-upload-module" target="_blank" rel="noopener">nginx-upload-module</a>和<a href="https://github.com/masterzen/nginx-upload-progress-module" target="_blank" rel="noopener">nginx-upload-progress-module</a>。</p>
+<p>要将nginx-upload-module和nginx-upload-progress-module编译进NginX，首先要下载NginX源码和nginx-upload-module、nginx-upload-progress-module这两个模块的源码，然后在NginX源码目录中，在<code>configure</code>参数中加入这两个这两个模块，最后<code>make install</code>，大概的执行命令：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> ~</span><br><span class="line">$ <span class="built_in">mkdir</span> tmp</span><br><span class="line">$ <span class="built_in">cd</span> tmp</span><br><span class="line">$ wget http://nginx.org/download/nginx-<span class="number">1</span>.<span class="number">11</span>.<span class="number">3</span>.tar.gz</span><br><span class="line">$ tar -xvzf nginx-<span class="number">1</span>.<span class="number">11</span>.<span class="number">3</span>.tar.gz</span><br><span class="line">$ git clone https://github.com/vkholodkov/nginx-upload-module.git</span><br><span class="line">$ git clont https://github.com/masterzen/nginx-upload-progress-module.git</span><br><span class="line">$ <span class="built_in">cd</span> nginx-<span class="number">1</span>.<span class="number">11</span>.<span class="number">3</span></span><br><span class="line">$ ./configure --add-module=~/tmp/nginx-upload-module --add-module~/tmp/nginx-upload-progress-module ...</span><br><span class="line">$ make</span><br><span class="line">$ make install</span><br></pre></td></tr></table></figure>
+
+<p>如果系统上已经安装过NginX并且所安装NginX版本支持动态模块，那么可以考虑将nginx-upload-module和nginx-upload-progress-module编译成动态模块，这样就不需要重新安装NginX。<br><a href="https://github.com/breeze2/nginx-module-libs" target="_blank" rel="noopener">nginx-module-libs</a>上有Ubuntu系统上主线NginX版本的一些动态模块，可以上面下载适配你的nginx-upload-module和nginx-upload-progress-module。</p>
+<blockquote>
+<p>下面主要介绍一下两个模块的用法：</p>
+</blockquote>
+<h3 id="nginx-upload-module"><a href="#nginx-upload-module" class="headerlink" title="nginx-upload-module"></a>nginx-upload-module</h3><p>当上传文件的体积小于<code>client_max_body_size</code>时， nginx-upload-module可以帮助我们限制上传速度，使用方法见下。<br>NginX的站点配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># website.conf</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="attribute">client_max_body_size</span> <span class="number">32m</span>;</span><br><span class="line">    <span class="comment"># 限制上传速度最大2Mbps</span></span><br><span class="line">    <span class="attribute">upload_limit_rate</span> <span class="number">256k</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /upload &#123;</span><br><span class="line">        <span class="comment"># 限制上传文件最大30MB</span></span><br><span class="line">        <span class="attribute">upload_max_file_size</span> <span class="number">30m</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 后续交给 upload.php 处理</span></span><br><span class="line">        <span class="attribute">upload_pass</span> /upload.php;</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 指定上传文件存放目录，1表示按1位散列，将上传文件随机存到指定目录下的0、1、2、...、8、9目录中（这些目录要手动建立）</span></span><br><span class="line">        <span class="attribute">upload_store</span> /tmp <span class="number">1</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 上传文件的访问权限，user:r表示用户只读</span></span><br><span class="line">        <span class="attribute">upload_store_access</span> user:r;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 设置请求体的字段</span></span><br><span class="line">        <span class="attribute">upload_set_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_name"</span> <span class="string">"<span class="variable">$upload_file_name</span>"</span>;</span><br><span class="line">        <span class="attribute">upload_set_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_content_type"</span> <span class="string">"<span class="variable">$upload_content_type</span>"</span>;</span><br><span class="line">        <span class="attribute">upload_set_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_path"</span> <span class="string">"<span class="variable">$upload_tmp_path</span>"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 指示后端关于上传文件的md5值和文件大小</span></span><br><span class="line">        <span class="attribute">upload_aggregate_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_md5"</span> <span class="string">"<span class="variable">$upload_file_md5</span>"</span>;</span><br><span class="line">        <span class="attribute">upload_aggregate_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_size"</span> <span class="string">"<span class="variable">$upload_file_size</span>"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">upload_pass_form_field</span> <span class="string">"^submit$|^description$"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 若出现如下错误码则删除上传的文件</span></span><br><span class="line">        <span class="attribute">upload_cleanup</span> <span class="number">400</span> <span class="number">404</span> <span class="number">499</span> <span class="number">500</span>-<span class="number">505</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上传文件的页面：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"upload"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span> <span class="attr">action</span>=<span class="string">"/upload"</span> <span class="attr">method</span>=<span class="string">"post"</span> &gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">"upload_file"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">label</span>=<span class="string">"fileupload"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Upload File"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>处理上传结果的脚本：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">// upload.php</span></span><br><span class="line">print_r($_REQUEST);</span><br></pre></td></tr></table></figure>
+
+<p>如果对PHP解析使用了优雅链接，比如Laravel，那么应该这样使用：</p>
+<p>NginX的站点配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># website.conf</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="attribute">client_max_body_size</span> <span class="number">32m</span>;</span><br><span class="line">    <span class="comment"># 限制上传速度最大2Mbps</span></span><br><span class="line">    <span class="attribute">upload_limit_rate</span> <span class="number">256k</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> / &#123;</span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ /index.php?<span class="variable">$query_string</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> <span class="regexp">~ \.php$</span> &#123;</span><br><span class="line">        <span class="attribute">include</span> snippets/fastcgi-php.conf;</span><br><span class="line">        <span class="attribute">fastcgi_param</span> HTTP_PROXY <span class="string">""</span>;</span><br><span class="line">        <span class="attribute">fastcgi_pass</span> unix:/run/php/php-fpm.sock;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> <span class="variable">@upload_handle</span> &#123;</span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^</span> /index.php <span class="literal">last</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /upload &#123;</span><br><span class="line">        <span class="comment"># 限制上传文件最大30MB</span></span><br><span class="line">        <span class="attribute">upload_max_file_size</span> <span class="number">30m</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 后续交给 index.php 处理</span></span><br><span class="line">        <span class="attribute">upload_pass</span> <span class="variable">@upload_handle</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 指定上传文件存放目录，1表示按1位散列，将上传文件随机存到指定目录下的0、1、2、...、8、9目录中（这些目录要手动建立）</span></span><br><span class="line">        <span class="attribute">upload_store</span> /tmp <span class="number">1</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 上传文件的访问权限，user:r表示用户只读</span></span><br><span class="line">        <span class="attribute">upload_store_access</span> user:r;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 设置请求体的字段</span></span><br><span class="line">        <span class="attribute">upload_set_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_name"</span> <span class="string">"<span class="variable">$upload_file_name</span>"</span>;</span><br><span class="line">        <span class="attribute">upload_set_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_content_type"</span> <span class="string">"<span class="variable">$upload_content_type</span>"</span>;</span><br><span class="line">        <span class="attribute">upload_set_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_path"</span> <span class="string">"<span class="variable">$upload_tmp_path</span>"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 指示后端关于上传文件的md5值和文件大小</span></span><br><span class="line">        <span class="attribute">upload_aggregate_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_md5"</span> <span class="string">"<span class="variable">$upload_file_md5</span>"</span>;</span><br><span class="line">        <span class="attribute">upload_aggregate_form_field</span> <span class="string">"<span class="variable">$&#123;upload_field_name&#125;</span>_size"</span> <span class="string">"<span class="variable">$upload_file_size</span>"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">upload_pass_form_field</span> <span class="string">"^submit$|^description$"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 若出现如下错误码则删除上传的文件</span></span><br><span class="line">        <span class="attribute">upload_cleanup</span> <span class="number">400</span> <span class="number">404</span> <span class="number">499</span> <span class="number">500</span>-<span class="number">505</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上传文件的页面：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- laravel blade.php --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"upload?_token=&#123;&#123;csrf_token()&#125;&#125;"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span> <span class="attr">action</span>=<span class="string">"/upload"</span> <span class="attr">method</span>=<span class="string">"post"</span> &gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">"upload_file"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">label</span>=<span class="string">"fileupload"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Upload File"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>Laravel路由配置：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">// routes/web.php</span></span><br><span class="line">Route::post(<span class="string">'/upload'</span>, <span class="string">'Web\IndexController@upload'</span>)-&gt;name(<span class="string">'upload'</span>);</span><br></pre></td></tr></table></figure>
+
+<p>Laravel控制器中处理上传的方法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">// Web/IndexController.php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">upload</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    dump(request());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="nginx-upload-progress-module"><a href="#nginx-upload-progress-module" class="headerlink" title="nginx-upload-progress-module"></a>nginx-upload-progress-module</h3><p>nginx-upload-progress-module可以帮助我们跟踪上传的进度，使用方法见下。</p>
+<p>NginX的站点配置：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># website.conf</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="attribute">client_max_body_size</span> <span class="number">32m</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 开辟一个空间proxied来存储跟踪上传的信息1MB</span></span><br><span class="line">    <span class="attribute">upload_progress</span> proxied <span class="number">1m</span>;</span><br><span class="line">    <span class="attribute">location</span><span class="regexp"> ^~</span> /progress &#123;</span><br><span class="line">        <span class="comment"># 报告上传的信息</span></span><br><span class="line">        <span class="attribute">report_uploads</span> proxied;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /upload &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment"># 上传完成后，仍然保存上传信息5s</span></span><br><span class="line">        <span class="attribute">track_uploads</span> proxied <span class="number">5s</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上传文件的页面和每隔一秒查询一下上传进度的脚本：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"upload"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span> <span class="attr">action</span>=<span class="string">"/upload"</span> <span class="attr">method</span>=<span class="string">"post"</span> <span class="attr">onsubmit</span>=<span class="string">"openProgressBar(); return true;"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">"userfile"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">label</span>=<span class="string">"fileupload"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Upload File"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"progress"</span> <span class="attr">style</span>=<span class="string">"width: 400px; border: 1px solid black"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"progressbar"</span> <span class="attr">style</span>=<span class="string">"width: 1px; background-color: black; border: 1px solid white"</span>&gt;</span>&amp;nbsp;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"tp"</span>&gt;</span>(progress)<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span></span><br><span class="line"><span class="actionscript">    <span class="keyword">var</span> interval = <span class="literal">null</span>;</span></span><br><span class="line"><span class="actionscript">    <span class="keyword">var</span> uuid = <span class="string">""</span>;</span></span><br><span class="line"><span class="actionscript">    <span class="function"><span class="keyword">function</span> <span class="title">openProgressBar</span><span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">        <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">32</span>; i++) &#123;</span></span><br><span class="line"><span class="javascript">            uuid += <span class="built_in">Math</span>.floor(<span class="built_in">Math</span>.random() * <span class="number">16</span>).toString(<span class="number">16</span>);</span></span><br><span class="line">        &#125;</span><br><span class="line"><span class="javascript">        <span class="built_in">document</span>.getElementById(<span class="string">"upload"</span>).action = <span class="string">"/upload?X-Progress-ID="</span> + uuid;</span></span><br><span class="line"><span class="actionscript">        <span class="comment">/* 每隔一秒查询一下上传进度 */</span></span></span><br><span class="line"><span class="javascript">        interval = <span class="built_in">window</span>.setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line">            fetch(uuid);</span><br><span class="line">        &#125;, 1000);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="actionscript">    <span class="function"><span class="keyword">function</span> <span class="title">fetch</span><span class="params">(uuid)</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">        <span class="keyword">var</span> req = <span class="keyword">new</span> XMLHttpRequest();</span></span><br><span class="line"><span class="actionscript">        req.open(<span class="string">"GET"</span>, <span class="string">"/progress"</span>, <span class="number">1</span>);</span></span><br><span class="line"><span class="actionscript">        req.setRequestHeader(<span class="string">"X-Progress-ID"</span>, uuid);</span></span><br><span class="line"><span class="actionscript">        req.onreadystatechange = <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">            <span class="keyword">if</span> (req.readyState == <span class="number">4</span>) &#123;</span></span><br><span class="line"><span class="actionscript">                <span class="keyword">if</span> (req.status == <span class="number">200</span>) &#123;</span></span><br><span class="line"><span class="javascript">                    <span class="keyword">var</span> upload = <span class="built_in">eval</span>(req.responseText);</span></span><br><span class="line"><span class="javascript">                    <span class="built_in">document</span>.getElementById(<span class="string">'tp'</span>).innerHTML = upload.state;</span></span><br><span class="line"><span class="actionscript">                    <span class="comment">/* 更新进度条 */</span></span></span><br><span class="line"><span class="actionscript">                    <span class="keyword">if</span> (upload.state == <span class="string">'done'</span> || upload.state == <span class="string">'uploading'</span>) &#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">var</span> bar = <span class="built_in">document</span>.getElementById(<span class="string">'progressbar'</span>);</span></span><br><span class="line"><span class="actionscript">                        <span class="keyword">var</span> w = <span class="number">400</span> * upload.received / upload.size;</span></span><br><span class="line"><span class="actionscript">                        bar.style.width = w + <span class="string">'px'</span>;</span></span><br><span class="line">                    &#125;</span><br><span class="line"><span class="actionscript">                    <span class="comment">/* 上传完成，不再查询进度 */</span></span></span><br><span class="line"><span class="actionscript">                    <span class="keyword">if</span> (upload.state == <span class="string">'done'</span>) &#123;</span></span><br><span class="line"><span class="javascript">                        <span class="built_in">window</span>.clearTimeout(interval);</span></span><br><span class="line">                    &#125;</span><br><span class="line"><span class="actionscript">                    <span class="keyword">if</span> (upload.state == <span class="string">'error'</span>) &#123;</span></span><br><span class="line"><span class="javascript">                        <span class="built_in">window</span>.clearTimeout(interval);</span></span><br><span class="line"><span class="actionscript">                        alert(<span class="string">'something wrong'</span>);</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="actionscript">        req.send(<span class="literal">null</span>);</span></span><br><span class="line">    &#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>当上传文件的体积大于<code>client_max_body_size</code>时， nginx-upload-module未能帮我们立刻中断上传，并且不能限制上传速度，但是nginx-upload-progress-module可以向前端报告文件过大的错误，前端可以这样子来中断上传：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"upload"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span> <span class="attr">action</span>=<span class="string">"/upload"</span> <span class="attr">method</span>=<span class="string">"post"</span> <span class="attr">onsubmit</span>=<span class="string">"openProgressBar(); return false;"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">"userfile"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">label</span>=<span class="string">"fileupload"</span> <span class="attr">id</span>=<span class="string">"userfile"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Upload File"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"progress"</span> <span class="attr">style</span>=<span class="string">"width: 400px; border: 1px solid black"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"progressbar"</span> <span class="attr">style</span>=<span class="string">"width: 1px; background-color: black; border: 1px solid white"</span>&gt;</span>&amp;nbsp;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"tp"</span>&gt;</span>(progress)<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span></span><br><span class="line"><span class="actionscript">    <span class="keyword">var</span> interval = <span class="literal">null</span>;</span></span><br><span class="line"><span class="actionscript">    <span class="keyword">var</span> uuid = <span class="string">""</span>;</span></span><br><span class="line"><span class="actionscript">    <span class="keyword">var</span> uploadxhr = <span class="literal">null</span>; </span></span><br><span class="line"><span class="actionscript">    <span class="function"><span class="keyword">function</span> <span class="title">openProgressBar</span><span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">        <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">32</span>; i++) &#123;</span></span><br><span class="line"><span class="javascript">            uuid += <span class="built_in">Math</span>.floor(<span class="built_in">Math</span>.random() * <span class="number">16</span>).toString(<span class="number">16</span>);</span></span><br><span class="line">        &#125;</span><br><span class="line"><span class="actionscript">        <span class="keyword">var</span> action = <span class="string">"/upload?X-Progress-ID="</span> + uuid;</span></span><br><span class="line"><span class="javascript">        <span class="keyword">var</span> file = <span class="built_in">document</span>.getElementById(<span class="string">'userfile'</span>).files[<span class="number">0</span>];</span></span><br><span class="line"><span class="actionscript">        uploadxhr = <span class="keyword">new</span> XMLHttpRequest();</span></span><br><span class="line"><span class="actionscript">        <span class="comment">// uploadxhr.file = file;</span></span></span><br><span class="line"><span class="actionscript">        uploadxhr.open(<span class="string">'post'</span>, action, <span class="literal">true</span>);</span></span><br><span class="line"><span class="actionscript">        uploadxhr.setRequestHeader(<span class="string">"Content-Type"</span>,<span class="string">"multipart/form-data"</span>);</span></span><br><span class="line">        uploadxhr.send(file);</span><br><span class="line"><span class="actionscript">        <span class="comment">/* 每隔一秒查询一下上传进度 */</span></span></span><br><span class="line"><span class="javascript">        interval = <span class="built_in">window</span>.setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line">            fetch(uuid);</span><br><span class="line">        &#125;, 1000);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="actionscript">    <span class="function"><span class="keyword">function</span> <span class="title">fetch</span><span class="params">(uuid)</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">        <span class="keyword">var</span> req = <span class="keyword">new</span> XMLHttpRequest();</span></span><br><span class="line"><span class="actionscript">        req.open(<span class="string">"GET"</span>, <span class="string">"/progress"</span>, <span class="number">1</span>);</span></span><br><span class="line"><span class="actionscript">        req.setRequestHeader(<span class="string">"X-Progress-ID"</span>, uuid);</span></span><br><span class="line"><span class="actionscript">        req.onreadystatechange = <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">            <span class="keyword">if</span> (req.readyState == <span class="number">4</span>) &#123;</span></span><br><span class="line"><span class="actionscript">                <span class="keyword">if</span> (req.status == <span class="number">200</span>) &#123;</span></span><br><span class="line"><span class="javascript">                    <span class="keyword">var</span> upload = <span class="built_in">eval</span>(req.responseText);</span></span><br><span class="line"><span class="javascript">                    <span class="built_in">document</span>.getElementById(<span class="string">'tp'</span>).innerHTML = upload.state;</span></span><br><span class="line"><span class="actionscript">                    <span class="comment">/* 更新进度条 */</span></span></span><br><span class="line"><span class="actionscript">                    <span class="keyword">if</span> (upload.state == <span class="string">'done'</span> || upload.state == <span class="string">'uploading'</span>) &#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">var</span> bar = <span class="built_in">document</span>.getElementById(<span class="string">'progressbar'</span>);</span></span><br><span class="line"><span class="actionscript">                        <span class="keyword">var</span> w = <span class="number">400</span> * upload.received / upload.size;</span></span><br><span class="line"><span class="actionscript">                        bar.style.width = w + <span class="string">'px'</span>;</span></span><br><span class="line">                    &#125;</span><br><span class="line"><span class="actionscript">                    <span class="comment">/* 上传完成，不再查询进度 */</span></span></span><br><span class="line"><span class="actionscript">                    <span class="keyword">if</span> (upload.state == <span class="string">'done'</span>) &#123;</span></span><br><span class="line"><span class="javascript">                        <span class="built_in">window</span>.clearTimeout(interval);</span></span><br><span class="line">                    &#125;</span><br><span class="line"><span class="actionscript">                    <span class="keyword">if</span> (upload.state == <span class="string">'error'</span>) &#123;</span></span><br><span class="line"><span class="javascript">                        <span class="built_in">window</span>.clearTimeout(interval);</span></span><br><span class="line">                        uploadxhr.abort();</span><br><span class="line"><span class="actionscript">                        alert(<span class="string">'something wrong'</span>);</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="actionscript">        req.send(<span class="literal">null</span>);</span></span><br><span class="line">    &#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="另外"><a href="#另外" class="headerlink" title="另外"></a>另外</h3><p>nginx-upload-module和nginx-upload-progress-module还提供了更多的指令，帮忙我们实现更复杂的上传文件功能，比如断点续传等，有兴趣可以阅读两个模块的官方文档，了解更多。<br>另外，因为nginx-upload-module未能及时拦下体积过大的文件上传，所以，尽管保障了用户的正常使用，可是依然不能防范恶意的流量攻击。nginx-upload-progress-module能够在一开始就检测到上传文件的体积是否过大（HTTP请求头里的<code>Content-Length</code>存有文件的体积大小），这时候就应该中断上传（可能是NginX限制，扩展模块无法中断HTTP请求），大家有兴趣的话可以研究一下NginX源码和扩展开发。</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>NginX的<code>client_max_body_size</code>设为<code>32m</code>，攻击者可以上传1GB的文件，直到上传到32MB的时候，NginX才会中断上传，服务器被消耗了32MB的流量。细想一下：</p>
+<ol>
+<li>即使NginX在一开始就拦下了体积大于32MB的文件，可是攻击者依然可以直接上传30MB大小的文件，服务器还是会被消耗了30MB的流量，所以在一开始就拦截的意义并不大；</li>
+<li>可是上传文件的体积大于<code>client_max_body_size</code>时，nginx-upload-module的限速功能不起作用，这就成问题了；</li>
+<li>NginX没有直接信任请求头的<code>Content-Length</code>，应该有他的依据，不过正常用户不会虚报吧（即使报小也不报大啊）；</li>
+<li>看来这个方案还需继续完善，或者借助现成的云存储服务来实现文件上传功能（可参考<a href="/2017/08/16/practice-qcloud-cos/">腾讯云COS的一次实践</a>）。</li>
+</ol>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>如果一个网站，允许用户全速上传文件，并持续数十秒，那么这个网站一定存在被流量攻击的风险，有可能是大量用户同时使用造成的，也有可能是恶意的DDoS攻击（？？好像所有网站都会有这个风险）。要是服务器带宽被占满，服务器对于一些用户就像是掉线了，所以上传文件的问题必须重视。另外，开发者不应该局限于一种编程语言或者一个知识领域上去思考解决问题，应该涉览更多的知识领域，从更多角度、更多方位去解决问题。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://blog.martinfjordvald.com/2010/08/file-uploading-with-php-and-nginx/" target="_blank" rel="noopener">OPTIMIZED FILE UPLOADING WITH PHP &amp; NGINX</a></li>
+<li><a href="https://www.sitepoint.com/upload-large-files-in-php/" target="_blank" rel="noopener">How to Upload Large Files in PHP</a></li>
+<li><a href="http://www.ruanyifeng.com/blog/2012/08/file_upload.html" target="_blank" rel="noopener">文件上传的渐进式增强</a></li>
+</ol>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/js/" rel="tag"># js</a>
+          
+            <a href="/blog/tags/scheme/" rel="tag"># scheme</a>
+          
+            <a href="/blog/tags/php/" rel="tag"># php</a>
+          
+            <a href="/blog/tags/nginx/" rel="tag"># nginx</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/math-calculating-pi.html" rel="next" title="怎样算出Pi（π）">
+                <i class="fa fa-chevron-left"></i> 怎样算出Pi（π）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/practice-qcloud-cos.html" rel="prev" title="腾讯云COS的一次实践">
+                腾讯云COS的一次实践 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/blog/assets/images/Breeze.JPG" alt="林毅锋">
+            
+              <p class="site-author-name" itemprop="name">林毅锋</p>
+              <div class="site-description motion-element" itemprop="description">阿牛不说话</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/blog/archives">
+                
+                    <span class="site-state-item-count">44</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/blog/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/blog/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">35</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/breeze2" title="GitHub &rarr; https://github.com/breeze2" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:805511939@qq.com" title="E-Mail &rarr; mailto:805511939@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#存在问题"><span class="nav-number">1.</span> <span class="nav-text">存在问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#限制上传文件的大小"><span class="nav-number">1.1.</span> <span class="nav-text">限制上传文件的大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#限制上传文件的速度"><span class="nav-number">1.2.</span> <span class="nav-text">限制上传文件的速度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#上传文件的进度"><span class="nav-number">1.3.</span> <span class="nav-text">上传文件的进度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方案"><span class="nav-number">2.</span> <span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#nginx-upload-module"><span class="nav-number">2.1.</span> <span class="nav-text">nginx-upload-module</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nginx-upload-progress-module"><span class="nav-number">2.2.</span> <span class="nav-text">nginx-upload-progress-module</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#另外"><span class="nav-number">2.3.</span> <span class="nav-text">另外</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">2.4.</span> <span class="nav-text">思考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后"><span class="nav-number">3.</span> <span class="nav-text">最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">林毅锋</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/blog/js/utils.js?v=7.1.2"></script>
+
+  <script src="/blog/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/blog/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/blog/js/scrollspy.js?v=7.1.2"></script>
+<script src="/blog/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/blog/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/blog/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

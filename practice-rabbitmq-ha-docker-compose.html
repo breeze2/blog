@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/blog/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/blog/assets/images/favicon.ico?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="RabbitMQ是基于高级消息队列协议（AMQP）实现的开源消息代理软件，主要提供消息队列服务。这里介绍用Docker Compose搭建RabbitMQ高可用集群的过程。  RabbitMQ自身提供部署集群的功能，通过命令： 123$ rabbitmqctl -n rabbit@rmqha_node1 stop_app$ rabbitmqctl -n rabbit@rmqha_node1 jo">
+<meta name="keywords" content="practice,docker,rabbitmq,haproxy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用Docker搭建RabbitMQ高可用集群">
+<meta property="og:url" content="https://breeze2.github.io/blog/practice-rabbitmq-ha-docker-compose.html">
+<meta property="og:site_name" content="Lin Blog">
+<meta property="og:description" content="RabbitMQ是基于高级消息队列协议（AMQP）实现的开源消息代理软件，主要提供消息队列服务。这里介绍用Docker Compose搭建RabbitMQ高可用集群的过程。  RabbitMQ自身提供部署集群的功能，通过命令： 123$ rabbitmqctl -n rabbit@rmqha_node1 stop_app$ rabbitmqctl -n rabbit@rmqha_node1 jo">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用Docker搭建RabbitMQ高可用集群">
+<meta name="twitter:description" content="RabbitMQ是基于高级消息队列协议（AMQP）实现的开源消息代理软件，主要提供消息队列服务。这里介绍用Docker Compose搭建RabbitMQ高可用集群的过程。  RabbitMQ自身提供部署集群的功能，通过命令： 123$ rabbitmqctl -n rabbit@rmqha_node1 stop_app$ rabbitmqctl -n rabbit@rmqha_node1 jo">
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://breeze2.github.io/blog/practice-rabbitmq-ha-docker-compose">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>用Docker搭建RabbitMQ高可用集群 | Lin Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lin Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">林柏格</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://breeze2.github.io/blog/blog/practice-rabbitmq-ha-docker-compose.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="林毅锋">
+      <meta itemprop="description" content="阿牛不说话">
+      <meta itemprop="image" content="/blog/assets/images/Breeze.JPG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lin Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">用Docker搭建RabbitMQ高可用集群
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2017-12-04 18:39:06" itemprop="dateCreated datePublished" datetime="2017-12-04T18:39:06Z">2017-12-04</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/blog/categories/实践/" itemprop="url" rel="index"><span itemprop="name">实践</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p><a href="https://www.rabbitmq.com/" target="_blank" rel="noopener">RabbitMQ</a>是基于<a href="https://www.amqp.org/" target="_blank" rel="noopener">高级消息队列协议（AMQP）</a>实现的开源消息代理软件，主要提供消息队列服务。这里介绍用Docker Compose搭建RabbitMQ高可用集群的过程。</p>
+</blockquote>
+<p>RabbitMQ自身提供部署集群的功能，通过命令：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ rabbitmqctl -n rabbit@rmqha_node1 stop_app</span><br><span class="line">$ rabbitmqctl -n rabbit@rmqha_node1 join_cluster --ram rabbit@rmqha_node0</span><br><span class="line">$ rabbitmqctl -n rabbit@rmqha_node1 start_app</span><br></pre></td></tr></table></figure>
+
+<p>就可以很容易的将节点rabbit@rmqha_node1加入到集群rabbit@rmqha_node0中。<code>--ram</code>选项表示节点以内存存储方式运行，读写速度快，重启后内容会丢失；不加<code>--ram</code>选项，节点则以磁盘存储方式运行，虽然读写速度慢，但是内容一般可以持久保持。</p>
+<p>在同一个RabbitMQ集群中，节点之间并没有主从之分，所有节点会同步相同的队列结构，队列内容（消息）则各自不同，不过消息会在节点间传递。这样的集群只是提高了应对大量并发请求的能力，整体可用性还是很低，因为某个节点宕机后，寄存在该节点上的消息不可用，而在其他节点上也没有这些消息的备份，若是该节点无法恢复，那么这些消息就丢失了。</p>
+<p>为了解决这个问题，RabbitMQ提供镜像队列功能，通过命令：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ rabbitmqctl set_policy ha-all "^" '&#123;"ha-<span class="built_in">mode</span>":"all"&#125;'</span><br></pre></td></tr></table></figure>
+
+<p>可以设置镜像队列，<code>&quot;^&quot;</code>表示匹配所有队列，即所有队列在各个节点上都会有备份。在集群中，只需要在一个节点上设置镜像队列，设置操作会同步到其他节点。</p>
+<a id="more"></a>
+
+<h2 id="Docker-Compose编排"><a href="#Docker-Compose编排" class="headerlink" title="Docker Compose编排"></a>Docker Compose编排</h2><p>这个编排主要实现一个磁盘节点、两个内存节点的RabbitMQ集群和一个HAProxy代理。</p>
+<h3 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h3><figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">L--rabbitmq-ha-docker                    //主目录</span><br><span class="line">    L--scripts                           //本地（Docker宿主）使用的一些脚本</span><br><span class="line">        L--rmqha_set_policy.sh           //设置各个数据库账号和开启主从复制</span><br><span class="line">    L--volumes                           //各个容器的挂载数据卷</span><br><span class="line">        L--rmqha_proxy</span><br><span class="line">            L--haproxy.cfg               //HAProxy配置</span><br><span class="line">        L--rmqha_slave</span><br><span class="line">            L--cluster_entrypoint.sh     //入口文件</span><br><span class="line">    L--parameters.env                    //账号密码等环境参数</span><br><span class="line">    L--docker-compose.yml                //编排配置</span><br></pre></td></tr></table></figure>
+
+<h3 id="docker-compose-yml"><a href="#docker-compose-yml" class="headerlink" title="docker-compose.yml"></a>docker-compose.yml</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">"2"</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  master:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">rabbitmq:3.6-management</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">rmqha_node0</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.9</span><span class="number">.0</span><span class="number">.10</span></span><br><span class="line"><span class="attr">    hostname:</span> <span class="string">rmqha_node0</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"55672:15672"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"56720:5672"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"><span class="attr">    environment:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">CONTAINER_NAME=rmqha_node0</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RABBITMQ_HOSTNAME=rmqha_node0</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RABBITMQ_NODENAME=rabbit</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  slave1:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">rabbitmq:3.6-management</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">rmqha_node1</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    depends_on:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">master</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.9</span><span class="number">.0</span><span class="number">.11</span></span><br><span class="line"><span class="attr">    hostname:</span> <span class="string">rmqha_node1</span></span><br><span class="line">    <span class="comment"># ports:</span></span><br><span class="line">    <span class="comment">#   - "56721:5672"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/rmqha_slave/cluster_entrypoint.sh:/usr/local/bin/cluster_entrypoint.sh"</span></span><br><span class="line"><span class="attr">    entrypoint:</span> <span class="string">"/usr/local/bin/cluster_entrypoint.sh"</span></span><br><span class="line"><span class="attr">    command:</span> <span class="string">"rabbitmq-server"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"><span class="attr">    environment:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">CONTAINER_NAME=rmqha_node1</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RABBITMQ_HOSTNAME=rmqha_node1</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RABBITMQ_NODENAME=rabbit</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RMQHA_RAM_NODE=true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  slave2:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">rabbitmq:3.6-management</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">rmqha_node2</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    depends_on:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">master</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.9</span><span class="number">.0</span><span class="number">.12</span></span><br><span class="line"><span class="attr">    hostname:</span> <span class="string">rmqha_node2</span></span><br><span class="line">    <span class="comment"># ports:</span></span><br><span class="line">    <span class="comment">#   - "56722:5672"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/rmqha_slave/cluster_entrypoint.sh:/usr/local/bin/cluster_entrypoint.sh"</span></span><br><span class="line"><span class="attr">    entrypoint:</span> <span class="string">"/usr/local/bin/cluster_entrypoint.sh"</span></span><br><span class="line"><span class="attr">    command:</span> <span class="string">"rabbitmq-server"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"><span class="attr">    environment:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">CONTAINER_NAME=rmqha_node2</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RABBITMQ_HOSTNAME=rmqha_node2</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RABBITMQ_NODENAME=rabbit</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">RMQHA_RAM_NODE=true</span></span><br><span class="line">  </span><br><span class="line"><span class="attr">  haproxy:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">haproxy:1.8</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">rmqha_proxy</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    depends_on:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">master</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">slave1</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">slave2</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.9</span><span class="number">.0</span><span class="number">.19</span></span><br><span class="line"><span class="attr">    hostname:</span> <span class="string">rmqha_proxy</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"56729:5672"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"51080:1080"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/rmqha_proxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/rmqha_proxy:/root/rmqha_proxy"</span></span><br><span class="line"><span class="attr">    environment:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">CONTAINER_NAME=rmqha_proxy</span></span><br><span class="line"></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line"><span class="attr">  net1:</span></span><br><span class="line"><span class="attr">    driver:</span> <span class="string">bridge</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.9</span><span class="number">.0</span><span class="number">.0</span><span class="string">/16</span></span><br><span class="line"><span class="attr">          gateway:</span> <span class="number">10.9</span><span class="number">.0</span><span class="number">.1</span></span><br></pre></td></tr></table></figure>
+
+<p>这里配置了四个容器服务，一个<code>haproxy</code>，负责代理各个RabbitMQ服务；三个<code>rabbitmq</code>，组成RabbitMQ集群。每个容器服务都指定了静态IP，即使服务重启也不会出现IP错乱问题，特殊的网络端口映射后面会介绍。</p>
+<h3 id="环境参数"><a href="#环境参数" class="headerlink" title="环境参数"></a>环境参数</h3><p>parameters.env</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">RMQHA_MASTER_NODE=rabbit</span><br><span class="line">RMQHA_MASTER_HOST=rmqha_node0</span><br><span class="line">RABBITMQ_DEFAULT_USER=guest</span><br><span class="line">RABBITMQ_DEFAULT_PASS=guest</span><br><span class="line">RABBITMQ_NODENAME=rabbit</span><br><span class="line">RABBITMQ_ERLANG_COOKIE=myerlangcookie</span><br></pre></td></tr></table></figure>
+
+<h3 id="RabbitMQ启动"><a href="#RabbitMQ启动" class="headerlink" title="RabbitMQ启动"></a>RabbitMQ启动</h3><p>这里RabbitMQ容器是使用<a href="https://hub.docker.com/_/rabbitmq/" target="_blank" rel="noopener">Docker官方镜像</a>生成的，节点rmqha_node0可以直接启动；而节点rmqha_node1和rmqha_node2需要加入到rmqha_node0集群里，所以需要需改入口文件。<br>volumes/rmqha_slave/cluster_entrypoint.sh</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">set -e</span><br><span class="line"></span><br><span class="line">if [ -e "/root/is_not_first_time" ]; then</span><br><span class="line">    exec "$@"</span><br><span class="line">else</span><br><span class="line">    /usr/local/bin/docker-entrypoint.sh rabbitmq-server -detached # 先按官方入口文件启动且是后台运行</span><br><span class="line"></span><br><span class="line">    rabbitmqctl -n "$RABBITMQ_NODENAME@$RABBITMQ_HOSTNAME" stop_app # 停止应用</span><br><span class="line">    rabbitmqctl -n "$RABBITMQ_NODENAME@$RABBITMQ_HOSTNAME" join_cluster $&#123;RMQHA_RAM_NODE:+--ram&#125; "$RMQHA_MASTER_NODE@$RMQHA_MASTER_HOST" # 加入rmqha_node0集群</span><br><span class="line">    rabbitmqctl -n "$RABBITMQ_NODENAME@$RABBITMQ_HOSTNAME" start_app # 启动应用</span><br><span class="line">    rabbitmqctl stop # 停止所有服务</span><br><span class="line"></span><br><span class="line">    touch /root/is_not_first_time</span><br><span class="line">    sleep 2s</span><br><span class="line">    exec "$@"</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<h3 id="HAProxy配置"><a href="#HAProxy配置" class="headerlink" title="HAProxy配置"></a>HAProxy配置</h3><p>这里HAProxy容器也是使用<a href="https://hub.docker.com/_/haproxy/" target="_blank" rel="noopener">Docker官方镜像</a>生成的，启动前需要先准备配置文件。<br>volumes/rmqha_proxy/haproxy.cfg</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">global</span><br><span class="line">    log 127.0.0.1 local0</span><br><span class="line">    maxconn 4096</span><br><span class="line"></span><br><span class="line">defaults</span><br><span class="line">    log     global</span><br><span class="line">    mode    tcp</span><br><span class="line">    option  tcplog</span><br><span class="line">    retries 3</span><br><span class="line">    option  redispatch</span><br><span class="line">    maxconn 2000</span><br><span class="line">    timeout connect 5000</span><br><span class="line">    timeout client 50000</span><br><span class="line">    timeout server 50000</span><br><span class="line"></span><br><span class="line"># ssl for rabbitmq</span><br><span class="line"># frontend ssl_rabbitmq</span><br><span class="line">    # bind *:5673 ssl crt /root/rmqha_proxy/rmqha.pem</span><br><span class="line">    # mode tcp</span><br><span class="line">    # default_backend rabbitmq</span><br><span class="line"></span><br><span class="line">listen stats</span><br><span class="line">    bind *:1080 # haproxy容器1080端口显示代理统计页面，映射到宿主51080端口</span><br><span class="line">    mode http</span><br><span class="line">    stats enable</span><br><span class="line">    stats hide-version</span><br><span class="line">    stats realm Haproxy\ Statistics</span><br><span class="line">    stats uri /</span><br><span class="line">    stats auth admin:admin</span><br><span class="line"></span><br><span class="line">listen rabbitmq</span><br><span class="line">    bind *:5672 # haproxy容器5672端口代理多个rabbitmq服务，映射到宿主56729端口</span><br><span class="line">    mode tcp</span><br><span class="line">    balance roundrobin</span><br><span class="line">    timeout client 1h</span><br><span class="line">    timeout server 1h</span><br><span class="line">    option  clitcpka</span><br><span class="line">    # server  rmqha_node0 rmqha_node0:5672  check inter 5s rise 2 fall 3</span><br><span class="line">    server  rmqha_node1 rmqha_node1:5672  check inter 5s rise 2 fall 3</span><br><span class="line">    server  rmqha_node2 rmqha_node2:5672  check inter 5s rise 2 fall 3</span><br></pre></td></tr></table></figure>
+
+<h2 id="实际运行"><a href="#实际运行" class="headerlink" title="实际运行"></a>实际运行</h2><p>在主目录下执行<code>docker-compose up -d</code>构建并运行整个Docker服务。</p>
+<h3 id="镜像队列"><a href="#镜像队列" class="headerlink" title="镜像队列"></a>镜像队列</h3><p>，在主目录下执行：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sh ./scripts/rmqha_set_policy.sh</span><br></pre></td></tr></table></figure>
+
+<p>实际上是执行了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker exec -it rmqha_node0 rabbitmqctl set_policy ha-all &apos;^&apos; &apos;&#123;&quot;ha-mode&quot;:&quot;all&quot;&#125;&apos;</span><br></pre></td></tr></table></figure>
+
+<p>即在rmqha_node0集群中将所有队列设置为镜像队列，这个命令只需执行一次，除非重新构建整个Docker服务。</p>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>用两个PHP脚本可以对RabbitMQ进行简单的测试，不过需要用到<code>php-amqplib</code>库。</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ composer require php-amqplib/php-amqplib</span><br></pre></td></tr></table></figure>
+
+<p>发送消息脚本：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">// send.php</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="keyword">__DIR__</span> . <span class="string">'/vendor/autoload.php'</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">PhpAmqpLib</span>\<span class="title">Connection</span>\<span class="title">AMQPStreamConnection</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">PhpAmqpLib</span>\<span class="title">Message</span>\<span class="title">AMQPMessage</span>;</span><br><span class="line"></span><br><span class="line">$connection = <span class="keyword">new</span> AMQPStreamConnection(<span class="string">'127.0.0.1'</span>, <span class="number">56729</span>, <span class="string">'guest'</span>, <span class="string">'guest'</span>, <span class="string">'/'</span>); <span class="comment">// 连接rmqha_proxy</span></span><br><span class="line">$channel    = $connection-&gt;channel();</span><br><span class="line">$channel-&gt;queue_declare(<span class="string">'task_queue'</span>, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">false</span>);</span><br><span class="line">$data = <span class="string">"Hello World!"</span>;</span><br><span class="line"></span><br><span class="line">$msg = <span class="keyword">new</span> AMQPMessage($data,</span><br><span class="line">    <span class="keyword">array</span>(<span class="string">'delivery_mode'</span> =&gt; AMQPMessage::DELIVERY_MODE_PERSISTENT)</span><br><span class="line">);</span><br><span class="line">$channel-&gt;basic_publish($msg, <span class="string">''</span>, <span class="string">'task_queue'</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="string">" [x] Sent "</span>, $data, <span class="string">"\n"</span>;</span><br><span class="line">$channel-&gt;close();</span><br><span class="line">$connection-&gt;close();</span><br></pre></td></tr></table></figure>
+
+<p>接受消息脚本：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">// receive.php</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="keyword">__DIR__</span> . <span class="string">'/vendor/autoload.php'</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">PhpAmqpLib</span>\<span class="title">Connection</span>\<span class="title">AMQPStreamConnection</span>;</span><br><span class="line"></span><br><span class="line">$connection = <span class="keyword">new</span> AMQPStreamConnection(<span class="string">'127.0.0.1'</span>, <span class="number">56720</span>, <span class="string">'guest'</span>, <span class="string">'guest'</span>, <span class="string">'/'</span>); <span class="comment">// 连接rmqha_node0</span></span><br><span class="line">$channel    = $connection-&gt;channel();</span><br><span class="line">$channel-&gt;queue_declare(<span class="string">'task_queue'</span>, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">false</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="string">' [*] Waiting for messages. To exit press CTRL+C'</span>, <span class="string">"\n"</span>;</span><br><span class="line">$callback = <span class="function"><span class="keyword">function</span> <span class="params">($msg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">" [x] Received "</span>, $msg-&gt;body, <span class="string">"\n"</span>;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">" [x] Done"</span>, <span class="string">"\n"</span>;</span><br><span class="line">    $msg-&gt;delivery_info[<span class="string">'channel'</span>]-&gt;basic_ack($msg-&gt;delivery_info[<span class="string">'delivery_tag'</span>]);</span><br><span class="line">&#125;;</span><br><span class="line">$channel-&gt;basic_qos(<span class="keyword">null</span>, <span class="number">1</span>, <span class="keyword">null</span>);</span><br><span class="line">$channel-&gt;basic_consume(<span class="string">'task_queue'</span>, <span class="string">''</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, $callback);</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (count($channel-&gt;callbacks)) &#123;</span><br><span class="line">    $channel-&gt;wait();</span><br><span class="line">&#125;</span><br><span class="line">$channel-&gt;close();</span><br><span class="line">$connection-&gt;close();</span><br></pre></td></tr></table></figure>
+
+<h2 id="SSL设置"><a href="#SSL设置" class="headerlink" title="SSL设置"></a>SSL设置</h2><p>为了RabbitMQ服务在网络传输中不泄漏信息，可以给HAProxy设置SSL传输（比对各个RabbitMQ服务设置SSL传输的性能消耗要小），这里简单的介绍一下自签证书：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> ./volumes/rmqha_proxy/</span><br><span class="line">$ openssl genrsa -out rmqha.key <span class="number">1024</span> # 随机生成一个私钥</span><br><span class="line">$ openssl req -new -key rmqha.key -out rmqha.csr # 根据私钥生成证书签署请求</span><br><span class="line">$ openssl x509 -req -days <span class="number">365</span> -<span class="keyword">in</span> rmqha.csr -signkey rmqha.key -out rmqha.crt # 自己签署证书</span><br><span class="line">$ cat rmqha.crt rmqha.key|tee rmqha.pem # 将私钥和证书合并到一个文件中</span><br></pre></td></tr></table></figure>
+
+<p>注意：生成证书签署请求时，需要填写一些信息，<code>Common Name (eg, fully qualified host name)</code>应该写<code>127.0.0.1</code>。
+HAProxy配置中添加：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># ssl for rabbitmq</span><br><span class="line">frontend ssl_rabbitmq</span><br><span class="line">    bind *:5673 ssl crt /root/rmqha_proxy/rmqha.pem # haproxy容器5673端口代理rabbitmq服务，需要映射到宿主端口</span><br><span class="line">    mode tcp</span><br><span class="line">    default_backend rabbitmq</span><br></pre></td></tr></table></figure>
+
+<p>PHP中通过SSL连接HAProxy代理服务示例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="keyword">__DIR__</span> . <span class="string">'/vendor/autoload.php'</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">PhpAmqpLib</span>\<span class="title">Connection</span>\<span class="title">AMQPSSLConnection</span>;</span><br><span class="line">$connection = <span class="keyword">new</span> AMQPSSLConnection(<span class="string">'127.0.0.1'</span>, <span class="number">56730</span>, <span class="string">'guest'</span>, <span class="string">'guest'</span>, <span class="string">'/'</span>, [<span class="string">'cafile'</span>=&gt;<span class="string">'./rmqha.crt'</span>]); <span class="comment">// 假设SSL的监听端口是56730，rmqha.crt是上面生成的自签证书</span></span><br><span class="line">$channel    = $connection-&gt;channel();</span><br></pre></td></tr></table></figure>
+
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><h3 id="建议"><a href="#建议" class="headerlink" title="建议"></a>建议</h3><ol>
+<li>消息生产者可以通过HAProxy代理连接RabbitMQ服务，实现负载均衡；</li>
+<li>消息处理者应该直接连接RabbitMQ服务主机，并且跟随RabbitMQ服务主机启动服务、停止服务。</li>
+</ol>
+<h3 id="扩展阅读"><a href="#扩展阅读" class="headerlink" title="扩展阅读"></a>扩展阅读</h3><ul>
+<li><a href="https://addops.cn/post/rabbitmq-ha-mirror.html" target="_blank" rel="noopener">Rabbitmq高可用-镜像队列模式</a></li>
+<li><a href="http://www.cnblogs.com/flat_peach/archive/2013/04/07/3004008.html" target="_blank" rel="noopener">Rabbitmq集群高可用测试</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/practice/" rel="tag"># practice</a>
+          
+            <a href="/blog/tags/docker/" rel="tag"># docker</a>
+          
+            <a href="/blog/tags/rabbitmq/" rel="tag"># rabbitmq</a>
+          
+            <a href="/blog/tags/haproxy/" rel="tag"># haproxy</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/practice-js-face-makeup-and-html2canvas.html" rel="next" title="JS实现人脸换妆和页面截图">
+                <i class="fa fa-chevron-left"></i> JS实现人脸换妆和页面截图
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/scheme-refresh-timeliness-cache.html" rel="prev" title="动态更新时效性缓存的一个解决方案">
+                动态更新时效性缓存的一个解决方案 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/blog/assets/images/Breeze.JPG" alt="林毅锋">
+            
+              <p class="site-author-name" itemprop="name">林毅锋</p>
+              <div class="site-description motion-element" itemprop="description">阿牛不说话</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/blog/archives">
+                
+                    <span class="site-state-item-count">44</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/blog/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/blog/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">35</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/breeze2" title="GitHub &rarr; https://github.com/breeze2" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:805511939@qq.com" title="E-Mail &rarr; mailto:805511939@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker-Compose编排"><span class="nav-number">1.</span> <span class="nav-text">Docker Compose编排</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目录结构"><span class="nav-number">1.1.</span> <span class="nav-text">目录结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker-compose-yml"><span class="nav-number">1.2.</span> <span class="nav-text">docker-compose.yml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#环境参数"><span class="nav-number">1.3.</span> <span class="nav-text">环境参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RabbitMQ启动"><span class="nav-number">1.4.</span> <span class="nav-text">RabbitMQ启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HAProxy配置"><span class="nav-number">1.5.</span> <span class="nav-text">HAProxy配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实际运行"><span class="nav-number">2.</span> <span class="nav-text">实际运行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#镜像队列"><span class="nav-number">2.1.</span> <span class="nav-text">镜像队列</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试"><span class="nav-number">3.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSL设置"><span class="nav-number">4.</span> <span class="nav-text">SSL设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后"><span class="nav-number">5.</span> <span class="nav-text">最后</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#建议"><span class="nav-number">5.1.</span> <span class="nav-text">建议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#扩展阅读"><span class="nav-number">5.2.</span> <span class="nav-text">扩展阅读</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">林毅锋</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/blog/js/utils.js?v=7.1.2"></script>
+
+  <script src="/blog/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/blog/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/blog/js/scrollspy.js?v=7.1.2"></script>
+<script src="/blog/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/blog/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/blog/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

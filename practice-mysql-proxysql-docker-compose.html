@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/blog/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/blog/assets/images/favicon.ico?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="ProxySQL是一个高性能的MySQL中间件，能够代理数百台MySQL服务器，支持数十万的并发连接。ProxySQL代理MySQL并提供读写分离，查询重写和数据分片等功能。这篇文章主要介绍用Docker Compose编排用ProxySQL实现MySQL集群上读写分离的实践过程。Docker Compose编排中使用了一个现有镜像，就是breeze2/proxysql。 本次实践源码上传在Git">
+<meta name="keywords" content="mysql,practice,docker,proxysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用Docker实现MySQL ProxySQL读写分离">
+<meta property="og:url" content="https://breeze2.github.io/blog/practice-mysql-proxysql-docker-compose.html">
+<meta property="og:site_name" content="Lin Blog">
+<meta property="og:description" content="ProxySQL是一个高性能的MySQL中间件，能够代理数百台MySQL服务器，支持数十万的并发连接。ProxySQL代理MySQL并提供读写分离，查询重写和数据分片等功能。这篇文章主要介绍用Docker Compose编排用ProxySQL实现MySQL集群上读写分离的实践过程。Docker Compose编排中使用了一个现有镜像，就是breeze2/proxysql。 本次实践源码上传在Git">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用Docker实现MySQL ProxySQL读写分离">
+<meta name="twitter:description" content="ProxySQL是一个高性能的MySQL中间件，能够代理数百台MySQL服务器，支持数十万的并发连接。ProxySQL代理MySQL并提供读写分离，查询重写和数据分片等功能。这篇文章主要介绍用Docker Compose编排用ProxySQL实现MySQL集群上读写分离的实践过程。Docker Compose编排中使用了一个现有镜像，就是breeze2/proxysql。 本次实践源码上传在Git">
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://breeze2.github.io/blog/practice-mysql-proxysql-docker-compose">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>用Docker实现MySQL ProxySQL读写分离 | Lin Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lin Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">林柏格</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://breeze2.github.io/blog/blog/practice-mysql-proxysql-docker-compose.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="林毅锋">
+      <meta itemprop="description" content="阿牛不说话">
+      <meta itemprop="image" content="/blog/assets/images/Breeze.JPG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lin Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">用Docker实现MySQL ProxySQL读写分离
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2017-10-10 10:26:13" itemprop="dateCreated datePublished" datetime="2017-10-10T10:26:13Z">2017-10-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/blog/categories/实践/" itemprop="url" rel="index"><span itemprop="name">实践</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><a href="http://www.proxysql.com/" target="_blank" rel="noopener">ProxySQL</a>是一个高性能的MySQL中间件，能够代理数百台MySQL服务器，支持数十万的并发连接。ProxySQL代理MySQL并提供读写分离，查询重写和数据分片等功能。<br>这篇文章主要介绍用Docker Compose编排用ProxySQL实现MySQL集群上读写分离的实践过程。<br>Docker Compose编排中使用了一个现有镜像，就是<a href="https://hub.docker.com/r/breeze2/proxysql/" target="_blank" rel="noopener">breeze2/proxysql</a>。
+本次实践源码上传在GitHub的<a href="https://github.com/breeze2/mysql-proxy-docker" target="_blank" rel="noopener">breeze2/mysql-proxy-docker</a>。</p>
+<a id="more"></a>
+
+<h2 id="Docker-Compose编排"><a href="#Docker-Compose编排" class="headerlink" title="Docker Compose编排"></a>Docker Compose编排</h2><p>这个编排主要实现一主两从的一个MySQL集群和一个ProxySQL代理，ProxySQL代理MYSQL集群的数据请求并且进行读写分离。</p>
+<h3 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h3><figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">L--mysql-proxy-docker                    //主目录</span><br><span class="line">    L--scripts                           //本地（Docker宿主）使用的一些脚本</span><br><span class="line">        L--mysql_set_users_and_repls.sh  //设置各个数据库账号和开启主从复制</span><br><span class="line">        L--...</span><br><span class="line">    L--services                          //需要build的服务（目前是空）</span><br><span class="line">    L--volumes                           //各个容器的挂载数据卷</span><br><span class="line">        L--mysql_node0</span><br><span class="line">        L--mysql_node1</span><br><span class="line">        L--mysql_node2</span><br><span class="line">        L--proxysql</span><br><span class="line">        L--share                         //各个容器共享的目录</span><br><span class="line">          L--scripts                     //各个容器共用的一些脚本</span><br><span class="line">    L--parameters.env                    //账号密码等环境参数</span><br><span class="line">    L--docker-compose.yml                //编排配置</span><br></pre></td></tr></table></figure>
+
+<h3 id="docker-compose-yml"><a href="#docker-compose-yml" class="headerlink" title="docker-compose.yml"></a>docker-compose.yml</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">"2"</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  master:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">mysql:5.7</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">mysql_node0</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.6</span><span class="number">.0</span><span class="number">.10</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"3306"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/share/:/root/share/"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/mysql_node0/lib/:/var/lib/mysql/"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/mysql_node0/conf/:/etc/mysql/conf.d/"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  slave1:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">mysql:5.7</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">mysql_node1</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    depends_on:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">master</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.6</span><span class="number">.0</span><span class="number">.11</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"3306"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/share/:/root/share/"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/mysql_node1/lib/:/var/lib/mysql/"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/mysql_node1/conf/:/etc/mysql/conf.d/"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"><span class="attr">  slave2:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="attr">mysql:5.7</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">mysql_node2</span></span><br><span class="line"><span class="attr">    depends_on:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">master</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.6</span><span class="number">.0</span><span class="number">.12</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"3306"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/share/:/root/share/"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/mysql_node2/lib/:/var/lib/mysql/"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/mysql_node2/conf/:/etc/mysql/conf.d/"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">  proxy:</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">breeze2/proxysql:1.4.3</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">proxysql</span></span><br><span class="line"><span class="attr">    depends_on:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">master</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">slave1</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">slave2</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="attr">    mem_limit:</span> <span class="number">256</span><span class="string">m</span></span><br><span class="line"><span class="attr">    networks:</span></span><br><span class="line"><span class="attr">      net1:</span></span><br><span class="line"><span class="attr">        ipv4_address:</span> <span class="number">10.6</span><span class="number">.0</span><span class="number">.9</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"127.0.0.1:60320:6032"</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"60330:6033"</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">"./volumes/proxysql/conf:/etc/proxysql"</span></span><br><span class="line"><span class="attr">    entrypoint:</span> <span class="string">"proxysql -f -c /etc/proxysql/pr.cnf"</span></span><br><span class="line"><span class="attr">    env_file:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">./parameters.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line"><span class="attr">  net1:</span></span><br><span class="line"><span class="attr">    driver:</span> <span class="string">bridge</span></span><br><span class="line"><span class="attr">    ipam:</span></span><br><span class="line"><span class="attr">      config:</span></span><br><span class="line"><span class="attr">        - subnet:</span> <span class="number">10.6</span><span class="number">.0</span><span class="number">.0</span><span class="string">/16</span></span><br><span class="line"><span class="attr">          gateway:</span> <span class="number">10.6</span><span class="number">.0</span><span class="number">.1</span></span><br></pre></td></tr></table></figure>
+
+<p>这里配置了四个容器服务，一个<code>breeze2/proxysql</code>，负责代理各个数据库；三个<code>mysql</code>，其中一个是主库，另外两个是从库。每个容器服务都指定了静态IP，即使服务重启也不会出现IP错乱问题。<code>proxysql</code>容器的<code>6032</code>是提供管理服务的端口，只对Docker宿主机本地IP开放，而<code>6033</code>是代理数据请求的端口，可以对Docker宿主机网络IP开放。</p>
+<h3 id="环境参数"><a href="#环境参数" class="headerlink" title="环境参数"></a>环境参数</h3><p>parameters.env</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MYSQL_ROOT_PASSWORD=123456</span><br><span class="line">MYSQL_DATABASE=testing</span><br><span class="line">MYSQL_User=testing</span><br><span class="line">MYSQL_PASSWORD=testing</span><br></pre></td></tr></table></figure>
+
+<h3 id="数据库配置"><a href="#数据库配置" class="headerlink" title="数据库配置"></a>数据库配置</h3><p>这里简单的配置一下各个数据库数据复制备份相关的参数<br>主库，mysql_node0/conf/my.cnf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=1</span><br><span class="line">gtid-mode=on</span><br><span class="line">enforce-gtid-consistency=true</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">binlog-do-db=testing</span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">replicate-do-db=testing</span><br><span class="line">replicate-ignore-db=mysql</span><br><span class="line">expire_logs_days=7</span><br></pre></td></tr></table></figure>
+
+<p>从库，mysql_node1/conf/my.cnf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=2</span><br><span class="line">gtid-mode=on</span><br><span class="line">enforce-gtid-consistency=true</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">binlog-do-db=testing</span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">replicate-do-db=testing</span><br><span class="line">replicate-ignore-db=mysql</span><br><span class="line">expire_logs_days=7</span><br></pre></td></tr></table></figure>
+
+<p>从库，mysql_node2/conf/my.cnf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=3</span><br><span class="line">gtid-mode=on</span><br><span class="line">enforce-gtid-consistency=true</span><br><span class="line">log-bin=mysql-bin</span><br><span class="line">binlog-do-db=testing</span><br><span class="line">binlog-ignore-db=mysql</span><br><span class="line">replicate-do-db=testing</span><br><span class="line">replicate-ignore-db=mysql</span><br><span class="line">expire_logs_days=7</span><br></pre></td></tr></table></figure>
+
+<h3 id="ProxySQL配置"><a href="#ProxySQL配置" class="headerlink" title="ProxySQL配置"></a>ProxySQL配置</h3><p>proxysql/conf/pr.cnf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line">datadir=&quot;/tmp&quot;</span><br><span class="line"># 管理平台参数</span><br><span class="line">admin_variables =</span><br><span class="line">&#123;</span><br><span class="line">  admin_credentials=&quot;admin2:admin2&quot;</span><br><span class="line">  mysql_ifaces=&quot;0.0.0.0:6032&quot;</span><br><span class="line">  refresh_interval=2000</span><br><span class="line">&#125;</span><br><span class="line"># mysql全局参数</span><br><span class="line">mysql_variables =</span><br><span class="line">&#123;</span><br><span class="line">  threads=4</span><br><span class="line">  max_connections=2048</span><br><span class="line">  default_query_delay=0</span><br><span class="line">  default_query_timeout=36000000</span><br><span class="line">  have_compress=true</span><br><span class="line">  poll_timeout=2000</span><br><span class="line">  # interfaces=&quot;0.0.0.0:6033;/tmp/proxysql.sock&quot;</span><br><span class="line">  interfaces=&quot;0.0.0.0:6033&quot;</span><br><span class="line">  default_schema=&quot;information_schema&quot;</span><br><span class="line">  stacksize=1048576</span><br><span class="line">  server_version=&quot;5.5.30&quot;</span><br><span class="line">  connect_timeout_server=3000</span><br><span class="line">  # make sure to configure monitor username and password</span><br><span class="line">  # https://github.com/sysown/proxysql/wiki/Global-variables#mysql-monitor_username-mysql-monitor_password</span><br><span class="line">  monitor_username=&quot;pr_muser&quot;</span><br><span class="line">  monitor_password=&quot;pr_mpass&quot;</span><br><span class="line">  monitor_history=600000</span><br><span class="line">  monitor_connect_interval=60000</span><br><span class="line">  monitor_ping_interval=10000</span><br><span class="line">  monitor_read_only_interval=1500</span><br><span class="line">  monitor_read_only_timeout=500</span><br><span class="line">  ping_interval_server_msec=120000</span><br><span class="line">  ping_timeout_server=500</span><br><span class="line">  commands_stats=true</span><br><span class="line">  sessions_sort=true</span><br><span class="line">  connect_retries_on_failure=10</span><br><span class="line">&#125;</span><br><span class="line"># mysql用户参数</span><br><span class="line">mysql_users = </span><br><span class="line">(</span><br><span class="line">  &#123;</span><br><span class="line">    username = &quot;pr_auser&quot;</span><br><span class="line">    password = &quot;pr_apass&quot;</span><br><span class="line">    default_hostgroup = 0</span><br><span class="line">  &#125;</span><br><span class="line">)</span><br><span class="line"># mysql服务器参数，10.6.0.10是主库放在0组，其他是从库放在1组</span><br><span class="line">mysql_servers =</span><br><span class="line">(</span><br><span class="line">  &#123;</span><br><span class="line">    address = &quot;10.6.0.10&quot;</span><br><span class="line">    port = 3306</span><br><span class="line">    weight = 1</span><br><span class="line">    hostgroup = 0</span><br><span class="line">    max_connections = 50</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    address = &quot;10.6.0.11&quot;</span><br><span class="line">    port = 3306</span><br><span class="line">    weight = 2</span><br><span class="line">    hostgroup = 1</span><br><span class="line">    max_connections = 100</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    address = &quot;10.6.0.12&quot;</span><br><span class="line">    port = 3306</span><br><span class="line">    weight = 2</span><br><span class="line">    hostgroup = 1</span><br><span class="line">    max_connections = 150</span><br><span class="line">  &#125;</span><br><span class="line">)</span><br><span class="line"># mysql请求规则，以下配置是读时加锁的请求发给0组，普通读取的请求发给1组，其他默认发给0组（上面的default_hostgroup）</span><br><span class="line">mysql_query_rules:</span><br><span class="line">(</span><br><span class="line">  &#123;</span><br><span class="line">    rule_id=1</span><br><span class="line">    active=1</span><br><span class="line">    match_pattern=&quot;^SELECT .* FOR UPDATE$&quot;</span><br><span class="line">    destination_hostgroup=0</span><br><span class="line">    apply=1</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    rule_id=2</span><br><span class="line">    active=1</span><br><span class="line">    match_pattern=&quot;^SELECT&quot;</span><br><span class="line">    destination_hostgroup=1</span><br><span class="line">    apply=1</span><br><span class="line">  &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="实际运行"><a href="#实际运行" class="headerlink" title="实际运行"></a>实际运行</h2><p>在主目录下执行<code>docker-compose up -d</code>构建并运行整个Docker服务。</p>
+<h3 id="开启主从复制"><a href="#开启主从复制" class="headerlink" title="开启主从复制"></a>开启主从复制</h3><p>在主目录下执行：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sh ./scripts/mysql_set_users_and_repls.sh</span><br></pre></td></tr></table></figure>
+
+<p>实际上是调用了挂载在数据库容器里的一些脚本：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">volumes/share/scripts/msyql_grant_proxysql_users.sh #设置给proxysql用的账号，pr_auser和pr_muser</span><br><span class="line">volumes/share/scripts/msyql_grant_slave.sh #主库设置给从库用的账号</span><br><span class="line">volumes/share/scripts/msyql_grant_slave.sh #从库开始数据复制</span><br></pre></td></tr></table></figure>
+
+<p>脚本里的执行命令都很简单，一看就明。</p>
+<h3 id="开启ProxySQL代理"><a href="#开启ProxySQL代理" class="headerlink" title="开启ProxySQL代理"></a>开启ProxySQL代理</h3><p>构建整个服务的时候，<code>proxysql</code>会先挂载主目录下的<code>./volumes/proxysql/conf/pr.cnf</code>到容器内<code>/etc/proxysql/pr.cnf</code>，然后执行<code>proxysql -f -c /etc/proxysql/pr.cnf</code>，所以这里的ProxySQL是按照<code>pr.cnf</code>里面的配置开启MySQL代理服务的，请仔细阅读上面<strong>ProxySQL配置</strong>。若有需要在ProxySQL运行的过程中修改配置，可以登录ProxySQL的管理系统操作。</p>
+<h3 id="ProxySQL管理系统"><a href="#ProxySQL管理系统" class="headerlink" title="ProxySQL管理系统"></a>ProxySQL管理系统</h3><p>在Docker宿主机上登录ProxySQL管理系统（Docker宿主机需要装有MySQL Client）：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mysql -u admin2 -padmin2 -h <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span> -P60320</span><br></pre></td></tr></table></figure>
+
+<p>在ProxySQL管理系统上添加一个mysql_user（注意这个testing账号是各个数据库都已建立的，具体查看上面<strong>环境参数</strong>）：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; INSERT INTO mysql_users(username, password, default_hostgroup) VALUES ('testing', 'testing', <span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+
+<p>确认是否已添加：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SELECT * FROM mysql_users;</span><br><span class="line">+----------+----------+--------+---------+-------------------+----------------+---------------+------------------------+--------------+---------+----------+-----------------+</span><br><span class="line">| username | password | active | use_ssl | default_hostgroup | default_schema | schema_locked | transaction_persistent | fast_forward | backend | frontend | max_connections |</span><br><span class="line">+----------+----------+--------+---------+-------------------+----------------+---------------+------------------------+--------------+---------+----------+-----------------+</span><br><span class="line">| pr_auser | pr_apass | <span class="number">1</span>      | <span class="number">0</span>       | <span class="number">0</span>                 |                | <span class="number">0</span>             | <span class="number">0</span>                      | <span class="number">0</span>            | <span class="number">1</span>       | <span class="number">1</span>        | <span class="number">10000</span>           |</span><br><span class="line">| testing  | testing  | <span class="number">1</span>      | <span class="number">0</span>       | <span class="number">2</span>                 | NULL           | <span class="number">0</span>             | <span class="number">1</span>                      | <span class="number">0</span>            | <span class="number">1</span>       | <span class="number">1</span>        | <span class="number">10000</span>           |</span><br><span class="line">+----------+----------+--------+---------+-------------------+----------------+---------------+------------------------+--------------+---------+----------+-----------------+</span><br><span class="line"><span class="number">2</span> rows <span class="keyword">in</span> <span class="built_in">set</span> (<span class="number">0</span>.<span class="number">00</span> sec)</span><br></pre></td></tr></table></figure>
+
+<p>把当前修改（MEMORY层）加载到正在运行的ProxySQL（RUNTIME层）：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; LOAD MYSQL USERS TO RUNTIME;</span><br></pre></td></tr></table></figure>
+
+<p>在Docker宿主机上确认ProxySQL是否已加载最新配置：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ mysql -u testing -ptesting -h <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span> -P60330</span><br><span class="line"><span class="function">mysql: [<span class="title">Warning</span>] <span class="title">Using</span> <span class="title">a</span> <span class="title">password</span> <span class="title">on</span> <span class="title">the</span> <span class="title">command</span> <span class="title">line</span> <span class="title">interface</span> <span class="title">can</span> <span class="title">be</span> <span class="title">insecure</span>.</span></span><br><span class="line"><span class="function"><span class="title">Welcome</span> <span class="title">to</span> <span class="title">the</span> <span class="title">MySQL</span> <span class="title">monitor</span>.  <span class="title">Commands</span> <span class="title">end</span> <span class="title">with</span> ; <span class="title">or</span> \<span class="title">g</span>.</span></span><br><span class="line"><span class="function"><span class="title">Your</span> <span class="title">MySQL</span> <span class="title">connection</span> <span class="title">id</span> <span class="title">is</span> 7</span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">version</span>: 5.5.30 (<span class="title">ProxySQL</span> <span class="title">Admin</span> <span class="title">Module</span>)</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">...</span></span><br></pre></td></tr></table></figure>
+
+<p>若想ProxySQL重启后依然是当前配置，要把当前修改（MEMORY层）保存到ProxySQL的Sqlite数据库里（DISK层）：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; SAVE MYSQL USERS TO DISK;</span><br></pre></td></tr></table></figure>
+
+<p>ProxySQL配置系统分三层，分别是MEMORY层、RUNTIME层和DISK层。ProxySQL管理系统操作的是MEMORY层，当前ProxySQL运行的是RUNTIME层，保存在ProxySQL本地Sqlite数据库里的是DISK层，详情请阅读文档<a href="https://github.com/sysown/proxysql/wiki/ProxySQL-Configuration" target="_blank" rel="noopener">ProxySQL Configuration</a>。</p>
+<h3 id="SysBench测试工具"><a href="#SysBench测试工具" class="headerlink" title="SysBench测试工具"></a>SysBench测试工具</h3><p><a href="https://github.com/akopytov/sysbench" target="_blank" rel="noopener">SysBench</a>是一个脚本化、多线程的基准测试工具，经常用于评估测试各种不同系统参数下的数据库负载情况。<br>SysBench的使用教程可以参考<a href="http://mingxinglai.com/cn/2013/07/sysbench/" target="_blank" rel="noopener">sysbench 0.5使用手册</a>。
+这里使用SysBench-v1.0.9来对ProxySQL进行测试。</p>
+<h4 id="SysBench-Test-Prepare"><a href="#SysBench-Test-Prepare" class="headerlink" title="SysBench Test Prepare"></a>SysBench Test Prepare</h4><p>首先，做测试准备：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ sysbench /usr/local/Cellar/sysbench/1.0.9/share/sysbench/oltp_read_write.lua  --threads=5 --max-requests=0 --time=36 --db-driver=mysql --mysql-user=pr_auser --mysql-password=&apos;pr_apass&apos; --mysql-port=60330  --mysql-host=127.0.0.1  --mysql-db=testing --report-interval=1 prepare</span><br><span class="line">sysbench 1.0.9 (using bundled LuaJIT 2.1.0-beta2)</span><br><span class="line"></span><br><span class="line">Initializing worker threads...</span><br><span class="line"></span><br><span class="line">Creating table &apos;sbtest1&apos;...</span><br><span class="line">Inserting 10000 records into &apos;sbtest1&apos;</span><br><span class="line">Creating a secondary index on &apos;sbtest1&apos;...</span><br></pre></td></tr></table></figure>
+
+<p>注意，<code>/usr/local/Cellar/sysbench/1.0.9/share/sysbench/oltp_read_write.lua</code>文件可以在SysBench安装包里找到，执行命令后，会在主库testing数据库里生成一个sbtest1表并插入一些数据，<br>在从库里一样可以看到testing数据库下有sbtest1表，说明主从复制已生效。</p>
+<h4 id="SysBench-Test-Run"><a href="#SysBench-Test-Run" class="headerlink" title="SysBench Test Run"></a>SysBench Test Run</h4><p>然后，开始读写测试：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ sysbench /usr/local/Cellar/sysbench/1.0.9/share/sysbench/oltp_read_write.lua  --threads=5 --max-requests=0 --time=36 --db-driver=mysql --mysql-user=pr_auser --mysql-password=&apos;pr_apass&apos; --mysql-port=60330  --mysql-host=127.0.0.1  --mysql-db=testing --report-interval=1 run</span><br><span class="line">sysbench 1.0.9 (using bundled LuaJIT 2.1.0-beta2)</span><br><span class="line"></span><br><span class="line">Running the test with following options:</span><br><span class="line">Number of threads: 5</span><br><span class="line">Report intermediate results every 1 second(s)</span><br><span class="line">Initializing random number generator from current time</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Initializing worker threads...</span><br><span class="line"></span><br><span class="line">Threads started!</span><br><span class="line"></span><br><span class="line">[ 1s ] thds: 5 tps: 51.66 qps: 1087.83 (r/w/o: 769.92/209.62/108.29) lat (ms,95%): 144.97 err/s: 0.00 reconn/s: 0.00</span><br><span class="line">[ 2s ] thds: 5 tps: 61.26 qps: 1229.13 (r/w/o: 862.60/243.01/123.52) lat (ms,95%): 142.39 err/s: 1.00 reconn/s: 0.00</span><br><span class="line">[ 3s ] thds: 5 tps: 60.85 qps: 1237.04 (r/w/o: 867.92/247.41/121.71) lat (ms,95%): 121.08 err/s: 0.00 reconn/s: 0.00</span><br><span class="line">[ 4s ] thds: 5 tps: 67.07 qps: 1332.44 (r/w/o: 931.01/267.29/134.15) lat (ms,95%): 127.81 err/s: 0.00 reconn/s: 0.00</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看结果"><a href="#查看结果" class="headerlink" title="查看结果"></a>查看结果</h4><p>登录ProxySQL管理系统，查看统计结果：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">$  mysql -u admin2 -padmin2 -h <span class="number">127</span>.<span class="number">0</span>.<span class="number">0</span>.<span class="number">1</span> -P60320</span><br><span class="line">mysql&gt; select * from stats_mysql_query_digest limit\G;</span><br><span class="line">*************************** <span class="number">1</span>. row ***************************</span><br><span class="line"><span class="function">  hostgroup: 0</span></span><br><span class="line"><span class="function"> <span class="title">schemaname</span>: <span class="title">testing</span></span></span><br><span class="line"><span class="function">   <span class="title">username</span>: <span class="title">pr_auser</span></span></span><br><span class="line"><span class="function">     <span class="title">digest</span>: 0<span class="title">xE365BEB555319B9E</span></span></span><br><span class="line"><span class="function"><span class="title">digest_text</span>: <span class="title">DELETE</span> <span class="title">FROM</span> <span class="title">sbtest1</span> <span class="title">WHERE</span> <span class="title">id</span>=?</span></span><br><span class="line"><span class="function"> <span class="title">count_star</span>: 2564</span></span><br><span class="line"><span class="function"> <span class="title">first_seen</span>: 1508313300</span></span><br><span class="line"><span class="function">  <span class="title">last_seen</span>: 1508313336</span></span><br><span class="line"><span class="function">   <span class="title">sum_time</span>: 1923227</span></span><br><span class="line"><span class="function">   <span class="title">min_time</span>: 149</span></span><br><span class="line"><span class="function">   <span class="title">max_time</span>: 39773</span></span><br><span class="line"><span class="function">*************************** 2. <span class="title">row</span> ***************************</span></span><br><span class="line"><span class="function">  <span class="title">hostgroup</span>: 0</span></span><br><span class="line"><span class="function"> <span class="title">schemaname</span>: <span class="title">testing</span></span></span><br><span class="line"><span class="function">   <span class="title">username</span>: <span class="title">pr_auser</span></span></span><br><span class="line"><span class="function">     <span class="title">digest</span>: 0<span class="title">xFB239BC95A23CA36</span></span></span><br><span class="line"><span class="function"><span class="title">digest_text</span>: <span class="title">UPDATE</span> <span class="title">sbtest1</span> <span class="title">SET</span> <span class="title">c</span>=? <span class="title">WHERE</span> <span class="title">id</span>=?</span></span><br><span class="line"><span class="function"> <span class="title">count_star</span>: 2566</span></span><br><span class="line"><span class="function"> <span class="title">first_seen</span>: 1508313300</span></span><br><span class="line"><span class="function">  <span class="title">last_seen</span>: 1508313336</span></span><br><span class="line"><span class="function">   <span class="title">sum_time</span>: 2016454</span></span><br><span class="line"><span class="function">   <span class="title">min_time</span>: 158</span></span><br><span class="line"><span class="function">   <span class="title">max_time</span>: 53514</span></span><br><span class="line"><span class="function">...</span></span><br><span class="line"><span class="function">*************************** 13. <span class="title">row</span> ***************************</span></span><br><span class="line"><span class="function">  <span class="title">hostgroup</span>: 1</span></span><br><span class="line"><span class="function"> <span class="title">schemaname</span>: <span class="title">testing</span></span></span><br><span class="line"><span class="function">   <span class="title">username</span>: <span class="title">pr_auser</span></span></span><br><span class="line"><span class="function">     <span class="title">digest</span>: 0<span class="title">xDBF868B2AA296BC5</span></span></span><br><span class="line"><span class="function"><span class="title">digest_text</span>: <span class="title">SELECT</span> <span class="title">SUM</span>(<span class="title">k</span>) <span class="title">FROM</span> <span class="title">sbtest1</span> <span class="title">WHERE</span> <span class="title">id</span> <span class="title">BETWEEN</span> ? <span class="title">AND</span> ?</span></span><br><span class="line"><span class="function"> <span class="title">count_star</span>: 2570</span></span><br><span class="line"><span class="function"> <span class="title">first_seen</span>: 1508313300</span></span><br><span class="line"><span class="function">  <span class="title">last_seen</span>: 1508313336</span></span><br><span class="line"><span class="function">   <span class="title">sum_time</span>: 7970660</span></span><br><span class="line"><span class="function">   <span class="title">min_time</span>: 216</span></span><br><span class="line"><span class="function">   <span class="title">max_time</span>: 56153</span></span><br><span class="line"><span class="function">*************************** 14. <span class="title">row</span> ***************************</span></span><br><span class="line"><span class="function">  <span class="title">hostgroup</span>: 1</span></span><br><span class="line"><span class="function"> <span class="title">schemaname</span>: <span class="title">testing</span></span></span><br><span class="line"><span class="function">   <span class="title">username</span>: <span class="title">pr_auser</span></span></span><br><span class="line"><span class="function">     <span class="title">digest</span>: 0<span class="title">xAC80A5EA0101522E</span></span></span><br><span class="line"><span class="function"><span class="title">digest_text</span>: <span class="title">SELECT</span> <span class="title">c</span> <span class="title">FROM</span> <span class="title">sbtest1</span> <span class="title">WHERE</span> <span class="title">id</span> <span class="title">BETWEEN</span> ? <span class="title">AND</span> ? <span class="title">ORDER</span> <span class="title">BY</span> <span class="title">c</span></span></span><br><span class="line"><span class="function"> <span class="title">count_star</span>: 2570</span></span><br><span class="line"><span class="function"> <span class="title">first_seen</span>: 1508313300</span></span><br><span class="line"><span class="function">  <span class="title">last_seen</span>: 1508313336</span></span><br><span class="line"><span class="function">   <span class="title">sum_time</span>: 10148202</span></span><br><span class="line"><span class="function">   <span class="title">min_time</span>: 272</span></span><br><span class="line"><span class="function">   <span class="title">max_time</span>: 58032</span></span><br><span class="line"><span class="function">14 <span class="title">rows</span> <span class="title">in</span> <span class="title">set</span> (0.00 <span class="title">sec</span>)</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到读操作都发送给了hostgroup=1组，写操作都发送给了hostgroup=0组，说明读写分离已生效，读写分离配置请仔细阅读上面<strong>ProxySQL配置mysql_query_rules部分</strong>。</p>
+<h2 id="此致"><a href="#此致" class="headerlink" title="此致"></a>此致</h2><p>到此，用Docker实现MySQL ProxySQL读写分离已完成。另外ProxySQL提供的查询重写功能，其实是利用mysql_query_rules配置，对接收到的查询语句进行正则替换，再传递给数据库服务器，详情请阅读文档<a href="https://github.com/sysown/proxysql/wiki/ProxySQL-Configuration" target="_blank" rel="noopener">ProxySQL Configuration</a>中的“MySQL Query Rules”部分；而数据分片功能，在真实数据分片的基础上，再结合mysql_query_rules配置，重写query到正确的主机、数据库或表上，详细内容可以阅读<a href="https://www.percona.com/blog/2016/08/30/mysql-sharding-with-proxysql/" target="_blank" rel="noopener">MySQL Sharding with ProxySQL</a>。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/mysql/" rel="tag"># mysql</a>
+          
+            <a href="/blog/tags/practice/" rel="tag"># practice</a>
+          
+            <a href="/blog/tags/docker/" rel="tag"># docker</a>
+          
+            <a href="/blog/tags/proxysql/" rel="tag"># proxysql</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/oauth2-types-and-applications-of-the-grants.html" rel="next" title="OAuth2.0的授权模式和应用">
+                <i class="fa fa-chevron-left"></i> OAuth2.0的授权模式和应用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/practice-make-mha4mysql-docker-image.html" rel="prev" title="制作mha4mysql的Docker镜像">
+                制作mha4mysql的Docker镜像 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/blog/assets/images/Breeze.JPG" alt="林毅锋">
+            
+              <p class="site-author-name" itemprop="name">林毅锋</p>
+              <div class="site-description motion-element" itemprop="description">阿牛不说话</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/blog/archives">
+                
+                    <span class="site-state-item-count">44</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/blog/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/blog/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">35</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/breeze2" title="GitHub &rarr; https://github.com/breeze2" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:805511939@qq.com" title="E-Mail &rarr; mailto:805511939@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker-Compose编排"><span class="nav-number">1.</span> <span class="nav-text">Docker Compose编排</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目录结构"><span class="nav-number">1.1.</span> <span class="nav-text">目录结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker-compose-yml"><span class="nav-number">1.2.</span> <span class="nav-text">docker-compose.yml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#环境参数"><span class="nav-number">1.3.</span> <span class="nav-text">环境参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据库配置"><span class="nav-number">1.4.</span> <span class="nav-text">数据库配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ProxySQL配置"><span class="nav-number">1.5.</span> <span class="nav-text">ProxySQL配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实际运行"><span class="nav-number">2.</span> <span class="nav-text">实际运行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#开启主从复制"><span class="nav-number">2.1.</span> <span class="nav-text">开启主从复制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开启ProxySQL代理"><span class="nav-number">2.2.</span> <span class="nav-text">开启ProxySQL代理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ProxySQL管理系统"><span class="nav-number">2.3.</span> <span class="nav-text">ProxySQL管理系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SysBench测试工具"><span class="nav-number">2.4.</span> <span class="nav-text">SysBench测试工具</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SysBench-Test-Prepare"><span class="nav-number">2.4.1.</span> <span class="nav-text">SysBench Test Prepare</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SysBench-Test-Run"><span class="nav-number">2.4.2.</span> <span class="nav-text">SysBench Test Run</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查看结果"><span class="nav-number">2.4.3.</span> <span class="nav-text">查看结果</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#此致"><span class="nav-number">3.</span> <span class="nav-text">此致</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">林毅锋</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/blog/js/utils.js?v=7.1.2"></script>
+
+  <script src="/blog/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/blog/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/blog/js/scrollspy.js?v=7.1.2"></script>
+<script src="/blog/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/blog/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/blog/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

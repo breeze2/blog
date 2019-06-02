@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/blog/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/blog/assets/images/favicon.ico?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="PHP基于C语言编写，支持自定义扩展，扩展自然也是基于C语言编写咯。大学里学（水）过C语言，写一个简单的PHP扩展，应该没问题吧。  运行环境 OS：Linux PHP：5.6 phpize：20131226   新建项目标准的自动生成首先要准备一份 PHP源代码 。将源代码包解压后，在ext目录里（PHP自带扩展的源代码就存放在这里），可以找到一个名字叫做ext_skel的可运行文件。这个ex">
+<meta name="keywords" content="php">
+<meta property="og:type" content="article">
+<meta property="og:title" content="动手写一个简单的PHP扩展">
+<meta property="og:url" content="https://breeze2.github.io/blog/php-a-simple-extension.html">
+<meta property="og:site_name" content="Lin Blog">
+<meta property="og:description" content="PHP基于C语言编写，支持自定义扩展，扩展自然也是基于C语言编写咯。大学里学（水）过C语言，写一个简单的PHP扩展，应该没问题吧。  运行环境 OS：Linux PHP：5.6 phpize：20131226   新建项目标准的自动生成首先要准备一份 PHP源代码 。将源代码包解压后，在ext目录里（PHP自带扩展的源代码就存放在这里），可以找到一个名字叫做ext_skel的可运行文件。这个ex">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="动手写一个简单的PHP扩展">
+<meta name="twitter:description" content="PHP基于C语言编写，支持自定义扩展，扩展自然也是基于C语言编写咯。大学里学（水）过C语言，写一个简单的PHP扩展，应该没问题吧。  运行环境 OS：Linux PHP：5.6 phpize：20131226   新建项目标准的自动生成首先要准备一份 PHP源代码 。将源代码包解压后，在ext目录里（PHP自带扩展的源代码就存放在这里），可以找到一个名字叫做ext_skel的可运行文件。这个ex">
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://breeze2.github.io/blog/php-a-simple-extension">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>动手写一个简单的PHP扩展 | Lin Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lin Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">林柏格</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://breeze2.github.io/blog/blog/php-a-simple-extension.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="林毅锋">
+      <meta itemprop="description" content="阿牛不说话">
+      <meta itemprop="image" content="/blog/assets/images/Breeze.JPG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lin Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">动手写一个简单的PHP扩展
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2015-12-26 19:39:19" itemprop="dateCreated datePublished" datetime="2015-12-26T19:39:19Z">2015-12-26</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/blog/categories/躬行/" itemprop="url" rel="index"><span itemprop="name">躬行</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>PHP基于C语言编写，支持自定义扩展，扩展自然也是基于C语言编写咯。大学里学（水）过C语言，写一个简单的PHP扩展，应该没问题吧。</p>
+</blockquote>
+<h2 id="运行环境"><a href="#运行环境" class="headerlink" title="运行环境"></a>运行环境</h2><ul>
+<li>OS：Linux</li>
+<li>PHP：5.6</li>
+<li>phpize：20131226</li>
+</ul>
+<hr>
+<h2 id="新建项目"><a href="#新建项目" class="headerlink" title="新建项目"></a>新建项目</h2><h3 id="标准的自动生成"><a href="#标准的自动生成" class="headerlink" title="标准的自动生成"></a>标准的自动生成</h3><p>首先要准备一份 <a href="http://cn2.php.net/distributions/php-5.6.16.tar.gz" target="_blank" rel="noopener">PHP源代码</a> 。将源代码包解压后，在ext目录里（PHP自带扩展的源代码就存放在这里），可以找到一个名字叫做<code>ext_skel</code>的可运行文件。这个<code>ext_skel</code>文件就是PHP提供给我们来创建扩展项目的，用法：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> ext/</span><br><span class="line">$ ./ext_skel --extname=my_ext_name</span><br></pre></td></tr></table></figure>
+
+<p>执行如上命令后，当前路径下就会多了一个名字叫<code>my_ext_name</code>的目录，里面存放着一个规范的PHP扩展项目代码，这些都是<code>ext_skel</code>自动生成的。主要的文件是这几个：</p>
+<ul>
+<li>config.m4（对应unix）</li>
+<li>config.w32（对应windows）</li>
+<li>my_ext_name.c</li>
+<li>php_my_ext_name.h</li>
+</ul>
+<p>如果对扩展结构已经足够熟悉，<code>./ext_skel</code>命令后面带上<code>--no-help</code>参数，自动生成的代码中就不会出现多余的注释。</p>
+<a id="more"></a>
+
+<h3 id="手动创建"><a href="#手动创建" class="headerlink" title="手动创建"></a>手动创建</h3><p>当然，没有<code>ext_skel</code>，也可以自己手动建立一个PHP扩展项目，先新建一个目录来存放代码：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">mkdir</span> my_ext_name</span><br><span class="line">$ <span class="built_in">cd</span> my_ext_name</span><br></pre></td></tr></table></figure>
+
+<p>然后新建一个 <a href="http://php.net/manual/zh/internals2.buildsys.configunix.php" target="_blank" rel="noopener">config.m4</a> 文件，写入如下配置：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//config.m4</span><br><span class="line">PHP_ARG_ENABLE(my_ext_name, whether to enable my_ext_name support,</span><br><span class="line">[  --enable-my_ext_name           Enable my_ext_name support])</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> test "$PHP_MY_EXT_NAME" != "no"; then</span><br><span class="line">  PHP_SUBST(MY_EXT_NAME_SHARED_LIBADD)</span><br><span class="line">  PHP_NEW_EXTENSION(my_ext_name, my_ext_name.c, $ext_shared)</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<p>解释一下：</p>
+<ol>
+<li><code>PHP_ARG_ENABLE</code>函数是用来配置扩展的工作方式的，如果该扩展依赖其他扩展，应该使用<code>PHP_ARG_WITH</code>函数（这里不用）；</li>
+<li><code>PHP_SUBST</code>函数将变量输出到由<code>configure</code>生成的文件中；</li>
+<li><code>PHP_NEW_EXTENSION</code>函数声明了该扩展的名称（如<code>my_ext_name</code>）、需要的源文件名（如<code>my_ext_name.c</code>）、此扩展的编译形式（<code>$ext_shared</code>）。<code>$ext_shared</code>这个参数表明该扩展不是一个静态模块，而是在PHP运行时动态加载的。<br>更多内容参见《PHP扩展开发与内核应用》的 <a href="http://www.walu.cc/phpbook/5.md" target="_blank" rel="noopener">第五章</a> 。</li>
+</ol>
+<hr>
+<h2 id="编写函数"><a href="#编写函数" class="headerlink" title="编写函数"></a>编写函数</h2><p>接下来，把想要实现的功能写入扩展中。写点什么好呢？其实我想写一个友好时间转化的函数，这是一个怎样的函数？用PHP语言表达会直观点：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">php_friendly_time</span><span class="params">($time)</span> </span>&#123;</span><br><span class="line">    $arg_time = <span class="keyword">null</span>;</span><br><span class="line">    $now_time = <span class="keyword">null</span>;</span><br><span class="line">    $dif_time = <span class="keyword">null</span>;</span><br><span class="line">    $ret_time = <span class="keyword">null</span>;</span><br><span class="line">    $timeinfo = <span class="keyword">null</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(is_int($time)) &#123;</span><br><span class="line">        $arg_time = $time;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(is_string($time)) &#123;</span><br><span class="line">        $arg_time = strtotime($time);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    $now_time = time();</span><br><span class="line">    $dif_time = $now_time - $arg_time;</span><br><span class="line">    <span class="keyword">if</span>($dif_time&lt;<span class="number">60</span>) &#123;</span><br><span class="line">        $ret_time = <span class="string">'just now'</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>($dif_time&lt;<span class="number">120</span>) &#123;</span><br><span class="line">        $ret_time = <span class="string">'one minute ago'</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>($dif_time&lt;<span class="number">3600</span>) &#123;</span><br><span class="line">        $ret_time = (int)($dif_time/<span class="number">60</span>) . <span class="string">' minutes ago'</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>($dif_time&lt;<span class="number">7200</span>) &#123;</span><br><span class="line">        $ret_time = <span class="string">'one hour ago'</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>($dif_time&lt;<span class="number">86400</span>) &#123;</span><br><span class="line">        $ret_time = (int)($dif_time/<span class="number">3600</span>) . <span class="string">' hours ago'</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>($dif_time&lt;<span class="number">172800</span>) &#123;</span><br><span class="line">        $timeinfo = getdate($arg_time);</span><br><span class="line">        $ret_time = <span class="string">'one day ago '</span> . $timeinfo[<span class="string">'hours'</span>] . <span class="string">':'</span> . $timeinfo[<span class="string">'minutes'</span>];</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>($dif_time&lt;<span class="number">1209600</span>) &#123;</span><br><span class="line">        $timeinfo = getdate($arg_time);</span><br><span class="line">        $ret_time = (int)($dif_time/<span class="number">86400</span>) . <span class="string">' days ago '</span> . $timeinfo[<span class="string">'hours'</span>] . <span class="string">':'</span> . $timeinfo[<span class="string">'minutes'</span>];</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        $ret_time = date(<span class="string">"Y-m-d H:i:s"</span>, $arg_time);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> $ret_time;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>好，想表达的大概就是这个意思，那么用C语言怎么在PHP扩展实现呢？</p>
+<h3 id="头文件"><a href="#头文件" class="headerlink" title="头文件"></a>头文件</h3><p>按照C语言开发规范，我们先创建一个头文件<code>php_my_ext_name.h</code>，这里主要是做一些宏定义操作：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//php_my_ext_name.h</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> PHP_MY_EXT_NAME_H</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PHP_MY_EXT_NAME_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> phpext_my_ext_name_ptr &amp;my_ext_name_module_entry</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PHP_MY_EXT_NAME_VERSION <span class="meta-string">"0.1.0"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> zend_module_entry my_ext_name_module_entry;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="程序文件"><a href="#程序文件" class="headerlink" title="程序文件"></a>程序文件</h3><p>创建一个程序文件<code>my_ext_name.c</code>，里面要写的代码大概是这样的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//my_ext_name.c</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> HAVE_CONFIG_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"config.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"php.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"php_my_ext_name.h"</span></span></span><br><span class="line"></span><br><span class="line">PHP_FUNCTION(friendly_time)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> zend_function_entry my_ext_name_functions[] = &#123;</span><br><span class="line">    PHP_FE(friendly_time, <span class="literal">NULL</span>)</span><br><span class="line">    PHP_FE_END</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">zend_module_entry my_ext_name_module_entry = &#123;</span><br><span class="line">    STANDARD_MODULE_HEADER,</span><br><span class="line">    <span class="string">"my_ext_name"</span>,</span><br><span class="line">    my_ext_name_functions,</span><br><span class="line">    <span class="literal">NULL</span>, <span class="comment">/* MINIT */</span></span><br><span class="line">    <span class="literal">NULL</span>, <span class="comment">/* MSHUTDOWN */</span></span><br><span class="line">    <span class="literal">NULL</span>, <span class="comment">/* RINIT */</span></span><br><span class="line">    <span class="literal">NULL</span>, <span class="comment">/* RSHUTDOWN */</span></span><br><span class="line">    <span class="literal">NULL</span>, <span class="comment">/* MINFO */</span></span><br><span class="line">    PHP_MY_EXT_NAME_VERSION,</span><br><span class="line">    STANDARD_MODULE_PROPERTIES</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> COMPILE_DL_MY_EXT_NAME</span></span><br><span class="line">ZEND_GET_MODULE(my_ext_name)</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>主要是这几个步骤：</p>
+<ul>
+<li>首先，加载一些需要的头文件；</li>
+<li>用<code>PHP_FUNCTION</code>这个宏函数定义想要在PHP中实现的扩展函数，参数名称将会是在PHP中调用的函数名称，如：<code>friendly_time</code>；</li>
+<li>然后在一个<code>zend_function_entry</code>结构体数组中，用<code>PHP_FE</code>（也是一个宏函数）注册刚刚定义的扩展函数，如：<code>friendly_time</code>；</li>
+<li>接下来，就是在一个<code>zend_module_entry</code>结构体中填写扩展模块的入口信息，当然这个结构体的名字要跟扩展名对应，如：<code>my_ext_name_module_entry</code>；</li>
+<li>最后，判断一下这个扩展模块是否被动态链接，如果是，就执行<code>ZEND_GET_MODULE</code>宏函数（在这里一定是）。</li>
+</ul>
+<p>简单的介绍一下<code>PHP_FUNCTION</code>，他的宏定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PHP_FUNCTION ZEND_FUNCTION</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ZEND_FUNCTION(name)     ZEND_NAMED_FUNCTION(ZEND_FN(name))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ZEND_NAMED_FUNCTION(name) void name(INTERNAL_FUNCTION_PARAMETERS)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ZEND_FN(name) zif_##name</span></span><br></pre></td></tr></table></figure>
+
+<p>所以呢，<code>PHP_FUNCTION(friendly_time)</code>最终会被转化成：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">zif_friendly_time</span><span class="params">(INTERNAL_FUNCTION_PARAMETERS)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>这样子看，代码是不是觉得熟悉多了？这才是正常的C代码啊！大家有没有注意到<code>my_ext_name_functions</code>数组里没有<code>,</code>分隔？来看看<code>PHP_FE</code>的宏定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ZEND_FE(name, arg_info) ZEND_FENTRY(name, ZEND_FN(name), arg_info, 0)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ZEND_FENTRY(zend_name, name, arg_info, flags) &#123; #zend_name, name, arg_info, (zend_uint) (sizeof(arg_info)/sizeof(struct _zend_arg_info)-1), flags &#125;,</span></span><br></pre></td></tr></table></figure>
+
+<p>于是，<code>PHP_FE(friendly_time, NULL)</code>最终会被转化成：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">"friendly_time"</span>,zif_walu_hello,<span class="literal">NULL</span>, (zend_uint) (<span class="keyword">sizeof</span>(<span class="literal">NULL</span>)/<span class="keyword">sizeof</span>(struct _zend_arg_info)<span class="number">-1</span>), <span class="number">0</span> &#125;,</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>,</code>已经带上了。<br>如果扩展模块里有多个函数，可以继续使用<code>PHP_FUNCTION</code>来定义，如<code>PHP_FUNCTION(more_function){...}</code>；然后在<code>my_ext_name_functions</code>数组中以与<code>friendly_time</code>同样的形式注册函数，如：<code>PHP_FE(more_function)</code>。</p>
+<h3 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h3><p>那么，<code>PHP_FUNCTION(friendly_time)</code>函数具体要怎么实现呢？先上代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">PHP_FUNCTION(friendly_time)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">char</span>* strg;</span><br><span class="line">    <span class="keyword">int</span>   argc;</span><br><span class="line">    <span class="keyword">int</span>   len;</span><br><span class="line">    <span class="keyword">int</span>   dif_time;</span><br><span class="line">    <span class="keyword">long</span>  arg_time;</span><br><span class="line">    <span class="keyword">long</span>  now_time;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tm</span> <span class="title">tm_time</span>;</span></span><br><span class="line">    zval **arg;</span><br><span class="line"></span><br><span class="line">    argc = ZEND_NUM_ARGS();</span><br><span class="line">    <span class="keyword">if</span> (argc == <span class="number">0</span>) &#123;</span><br><span class="line">        RETURN_NULL();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (zend_parse_parameters(argc TSRMLS_CC, <span class="string">"Z"</span>, &amp;arg) == FAILURE) &#123;</span><br><span class="line">        RETURN_NULL();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (Z_TYPE_PP(arg) == IS_STRING) &#123;</span><br><span class="line">        strptime(Z_STRVAL_PP(arg), <span class="string">"%Y-%m-%d %H:%M:%S"</span>, &amp;tm_time);</span><br><span class="line">        arg_time = mktime(&amp;tm_time);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(Z_TYPE_PP(arg) == IS_LONG) &#123;</span><br><span class="line">        arg_time = Z_LVAL_PP(arg);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        RETURN_NULL();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    time ( &amp;now_time );</span><br><span class="line">    dif_time = now_time - arg_time;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(dif_time&lt;<span class="number">60</span>) &#123;</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"just now"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(dif_time&lt;<span class="number">120</span>) &#123;</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"one minute ago"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(dif_time&lt;<span class="number">3600</span>) &#123;</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"%d minutes ago"</span>, dif_time/<span class="number">60</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(dif_time&lt;<span class="number">7200</span>) &#123;</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"one hour ago"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(dif_time&lt;<span class="number">86400</span>) &#123;</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"%d hours ago"</span>, dif_time/<span class="number">3600</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(dif_time&lt;<span class="number">172800</span>) &#123;</span><br><span class="line">        tm_time = *localtime( &amp;arg_time );</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"one day ago %d:%d"</span>, tm_time.tm_hour, tm_time.tm_min);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(dif_time&lt;<span class="number">1209600</span>) &#123;</span><br><span class="line">        tm_time = *localtime( &amp;arg_time );</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"%d days ago %d:%d"</span>, dif_time/<span class="number">86400</span>, tm_time.tm_hour, tm_time.tm_min);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        tm_time = *localtime( &amp;arg_time );</span><br><span class="line">        len = spprintf(&amp;strg, <span class="number">0</span>, <span class="string">"%d-%d-%d %d:%d"</span>, tm_time.tm_year+<span class="number">1900</span>, tm_time.tm_mon+<span class="number">1</span>, tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    RETURN_STRINGL(strg, len, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里涉及了几个知识点，记好了，考试会考到（开玩笑的）：</p>
+<ul>
+<li><a href="http://www.walu.cc/phpbook/2.md" target="_blank" rel="noopener">变量类型</a></li>
+<li><a href="http://www.walu.cc/phpbook/6.md" target="_blank" rel="noopener">函数参数</a></li>
+<li><a href="http://www.walu.cc/phpbook/7.md" target="_blank" rel="noopener">函数返回</a></li>
+</ul>
+<h4 id="接收参数"><a href="#接收参数" class="headerlink" title="接收参数"></a>接收参数</h4><ol>
+<li><p><code>ZEND_NUM_ARGS</code>这个函数（看他名字全大写，就知道也是个宏函数）可以获取到扩展函数在PHP运行环境中传入的参数个数；</p>
+</li>
+<li><p><code>zend_parse_parameters</code>函数是用来解析传入参数的，像上面的代码中：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (zend_parse_parameters(argc TSRMLS_CC, <span class="string">"Z"</span>, &amp;arg) == FAILURE) &#123;</span><br><span class="line">    RETURN_NULL();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> <code>Z</code>表示传入的参数类型是<code>zval**</code>（即在PHP中调用该函数时可以传入任意类型函数），这里是把一个<code>zval**</code>类型参数赋值给变量<code>arg</code>，详细内容参见《PHP扩展开发与内核应用》的 <a href="http://www.walu.cc/phpbook/7.md" target="_blank" rel="noopener">第七章</a> ；</p>
+</li>
+<li><p>大家有没有发现<code>zend_parse_parameters</code>的第一个参数和第二参数是用空格分隔的，实际上他的宏定义是这样的：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TSRMLS_CC ,tsrm_ls</span></span><br></pre></td></tr></table></figure>
+
+<p> 所以，<code>,</code>是有的。那么他的作用是什么呢？具体参见《<a href="http://www.laruence.com/2008/08/03/201.html" target="_blank" rel="noopener">揭秘TSRM（Introspecting TSRM）</a>》。</p>
+</li>
+</ol>
+<h4 id="类型判断"><a href="#类型判断" class="headerlink" title="类型判断"></a>类型判断</h4><p><code>Z_TYPE_PP(arg) == IS_STRING</code>要表达的意思很直观，就是判断一下变量<code>arg</code>的实际值是不是字符串类型，<code>Z_TYPE_PP</code>是用来获取<code>zval**</code>类型变量的实际值类型，类似的还有<code>Z_TYPE</code>（对应<code>zval</code>）和<code>Z_TYPE_P</code>（对应<code>zval*</code>）。PHP内核中的变量类型详细内容参见《PHP扩展开发与内核应用》的 <a href="http://www.walu.cc/phpbook/2.md" target="_blank" rel="noopener">第二章</a>。</p>
+<h4 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h4><p>比如在上面代码中，传入参数合法的花，返回的是<code>RETURN_STRINGL(strg, len, 0)</code>。与之类似的还有<code>RETURN_LONG</code>、<code>RETURN_DOUBLE</code>、<code>RETURN_BOOL</code>和<code>RETURN_NULL</code>等待，具体参见《PHP扩展开发与内核应用》的 <a href="http://www.walu.cc/phpbook/6.md" target="_blank" rel="noopener">第六章</a>。</p>
+<hr>
+<h2 id="编译运行"><a href="#编译运行" class="headerlink" title="编译运行"></a>编译运行</h2><p>代码编写完成后，在扩展项目目录下执行：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ phpize</span><br><span class="line">$ ./configure</span><br><span class="line">$ make</span><br><span class="line">$ make install</span><br></pre></td></tr></table></figure>
+
+<p>如果编译成功的话，该扩展模块已经安装到本地的PHP中了，然后在<code>php.ini</code>（一般在<code>/etc/php/</code>下）中开启该扩展模块，即在<code>php.ini</code>里加上：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">extension="my_ext_name.so"</span><br></pre></td></tr></table></figure>
+
+<p>用一下命令可以查看PHP开启的扩展模块：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ php -m</span><br></pre></td></tr></table></figure>
+
+<p>测试一下<code>friendly_time</code>函数能不能正常运行：</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ php -r '<span class="built_in">echo</span> friendly_time(<span class="built_in">time</span>()-<span class="number">1000</span>), "\n";'</span><br></pre></td></tr></table></figure>
+
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>通过测试比较，扩展形式实现的<code>friendly_time</code>函数，和纯PHP语言实现的<code>php_friendly_time</code>函数的执行效率差距不大，所以说，并不是所有的函数都应该用扩展形式实现。除非是非常复杂、耗时的操作需要以扩展形式实现，否则，我们应该尽量地使用PHP提供的原生函数来实现想要的功能。</p>
+<h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><ul>
+<li><a href="https://coding.net/u/breeze2/p/php-ext-dev-trip/git" target="_blank" rel="noopener">https://coding.net/u/breeze2/p/php-ext-dev-trip/git</a></li>
+</ul>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="http://www.laruence.com/" target="_blank" rel="noopener">风雪之隅</a></li>
+<li><a href="http://www.walu.cc/phpbook/preface.md" target="_blank" rel="noopener">PHP扩展开发与内核应用</a></li>
+</ul>
+<br>
+
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/php/" rel="tag"># php</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/mysql-about-deduplication.html" rel="next" title="关于查询数据去重">
+                <i class="fa fa-chevron-left"></i> 关于查询数据去重
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/film-ashes-of-time.html" rel="prev" title="时间的灰烬">
+                时间的灰烬 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/blog/assets/images/Breeze.JPG" alt="林毅锋">
+            
+              <p class="site-author-name" itemprop="name">林毅锋</p>
+              <div class="site-description motion-element" itemprop="description">阿牛不说话</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/blog/archives">
+                
+                    <span class="site-state-item-count">44</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/blog/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/blog/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">35</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/breeze2" title="GitHub &rarr; https://github.com/breeze2" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:805511939@qq.com" title="E-Mail &rarr; mailto:805511939@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#运行环境"><span class="nav-number">1.</span> <span class="nav-text">运行环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新建项目"><span class="nav-number">2.</span> <span class="nav-text">新建项目</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#标准的自动生成"><span class="nav-number">2.1.</span> <span class="nav-text">标准的自动生成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#手动创建"><span class="nav-number">2.2.</span> <span class="nav-text">手动创建</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写函数"><span class="nav-number">3.</span> <span class="nav-text">编写函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#头文件"><span class="nav-number">3.1.</span> <span class="nav-text">头文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#程序文件"><span class="nav-number">3.2.</span> <span class="nav-text">程序文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体实现"><span class="nav-number">3.3.</span> <span class="nav-text">具体实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#接收参数"><span class="nav-number">3.3.1.</span> <span class="nav-text">接收参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类型判断"><span class="nav-number">3.3.2.</span> <span class="nav-text">类型判断</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#返回值"><span class="nav-number">3.3.3.</span> <span class="nav-text">返回值</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译运行"><span class="nav-number">4.</span> <span class="nav-text">编译运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后"><span class="nav-number">5.</span> <span class="nav-text">最后</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#源码"><span class="nav-number">5.1.</span> <span class="nav-text">源码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">5.2.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">林毅锋</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/blog/js/utils.js?v=7.1.2"></script>
+
+  <script src="/blog/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/blog/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/blog/js/scrollspy.js?v=7.1.2"></script>
+<script src="/blog/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/blog/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/blog/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

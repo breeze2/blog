@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/blog/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/assets/images/favicon.ico?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/blog/assets/images/favicon.ico?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="在LeetCode上有一些有趣的MySQL查询问题，这里记录下来，方便以后查阅。">
+<meta name="keywords" content="mysql,leetcode">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一些有趣的MySQL查询问题">
+<meta property="og:url" content="https://breeze2.github.io/blog/note-mysql-in-leetcode.html">
+<meta property="og:site_name" content="Lin Blog">
+<meta property="og:description" content="在LeetCode上有一些有趣的MySQL查询问题，这里记录下来，方便以后查阅。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一些有趣的MySQL查询问题">
+<meta name="twitter:description" content="在LeetCode上有一些有趣的MySQL查询问题，这里记录下来，方便以后查阅。">
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://breeze2.github.io/blog/note-mysql-in-leetcode">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>一些有趣的MySQL查询问题 | Lin Blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lin Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">林柏格</h1>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/blog/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://breeze2.github.io/blog/blog/note-mysql-in-leetcode.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="林毅锋">
+      <meta itemprop="description" content="阿牛不说话">
+      <meta itemprop="image" content="/blog/assets/images/Breeze.JPG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lin Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">一些有趣的MySQL查询问题
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-03-02 10:02:13" itemprop="dateCreated datePublished" datetime="2018-03-02T10:02:13Z">2018-03-02</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/blog/categories/笔记/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>在<a href="https://leetcode.com/" target="_blank" rel="noopener">LeetCode</a>上有一些有趣的MySQL查询问题，这里记录下来，方便以后查阅。</p>
+</blockquote>
+<a id="more"></a>
+
+<h2 id="Department-Top-Three-Salaries"><a href="#Department-Top-Three-Salaries" class="headerlink" title="Department Top Three Salaries"></a>Department Top Three Salaries</h2><p>部门前三薪资问题：查询各个部门薪资前三的员工（薪资），并列排名只占一位。</p>
+<h3 id="原题"><a href="#原题" class="headerlink" title="原题"></a>原题</h3><p>The Employee table holds all employees. Every employee has an Id, and there is also a column for the department Id.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">----+-------+--------+--------------+</span></span><br><span class="line">| Id | Name  | Salary | DepartmentId |</span><br><span class="line">+<span class="comment">----+-------+--------+--------------+</span></span><br><span class="line">| 1  | Joe   | 70000  | 1            |</span><br><span class="line">| 2  | Henry | 80000  | 2            |</span><br><span class="line">| 3  | Sam   | 60000  | 2            |</span><br><span class="line">| 4  | Max   | 90000  | 1            |</span><br><span class="line">| 5  | Janet | 69000  | 1            |</span><br><span class="line">| 6  | Randy | 85000  | 1            |</span><br><span class="line">+<span class="comment">----+-------+--------+--------------+</span></span><br></pre></td></tr></table></figure>
+
+<p>The Department table holds all departments of the company.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">----+----------+</span></span><br><span class="line">| Id | Name     |</span><br><span class="line">+<span class="comment">----+----------+</span></span><br><span class="line">| 1  | IT       |</span><br><span class="line">| 2  | Sales    |</span><br><span class="line">+<span class="comment">----+----------+</span></span><br></pre></td></tr></table></figure>
+
+<p>Write a SQL query to find employees who earn the top three salaries in each of the department. For the above tables, your SQL query should return the following rows.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+------------+----------+--------+</span><br><span class="line">| Department | Employee | Salary |</span><br><span class="line">+------------+----------+--------+</span><br><span class="line">| IT         | Max      | 90000  |</span><br><span class="line">| IT         | Randy    | 85000  |</span><br><span class="line">| IT         | Joe      | 70000  |</span><br><span class="line">| Sales      | Henry    | 80000  |</span><br><span class="line">| Sales      | Sam      | 60000  |</span><br><span class="line">+------------+----------+--------+</span><br></pre></td></tr></table></figure>
+
+<h3 id="答案"><a href="#答案" class="headerlink" title="答案"></a>答案</h3><p>先说答案：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> dep.Name <span class="keyword">as</span> <span class="string">"Department"</span>, emp.Name <span class="keyword">as</span> <span class="string">"Employee"</span>, emp.Salary <span class="keyword">as</span> <span class="string">"Salary"</span></span><br><span class="line"><span class="keyword">from</span> Department <span class="keyword">as</span> dep <span class="keyword">join</span> Employee <span class="keyword">as</span> emp <span class="keyword">on</span> dep.Id = emp.DepartmentId</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="string">'x'</span> <span class="keyword">from</span> Employee <span class="keyword">as</span> emp1</span><br><span class="line">    <span class="keyword">where</span> emp1.Salary &gt; emp.Salary <span class="keyword">and</span> emp1.DepartmentId = emp.DepartmentId <span class="keyword">having</span> <span class="keyword">count</span>(<span class="keyword">distinct</span> emp1.Salary) &lt; <span class="number">3</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>首先Department和Employee联接是不可少的，因为结果包含两张表的字段；再用子查询（exists），保留同部门内高于本身薪资的不超过三个的员工（having），并列排名只占一位，需要去重（distinct）。</p>
+<p>注意：以上<code>&#39;x&#39;</code>并无特殊意义，只是有值时表示存在，无值时表示不存在。；<code>having</code>应该配合<code>group by</code>使用，单独使用<code>having</code>时视当前数据为一组；<code>count()</code>函数也是，单独使用<code>having</code>时也相当于给当前数据分成一组。</p>
+<p>另外：只用一个<code>select</code>（没有子查询）也能实现，就是将Employee和自身<code>join</code>，<code>on</code>薪资比自己高的员工；然后用<code>group by</code>去重，再结合<code>having count(distinct emp1.Salary) &lt; 3</code>，保留有效结果。这个<code>join</code>方法效率远低于上面子查询方法，所以不要对子查询有偏见。</p>
+<h2 id="Human-Traffic-of-Stadium"><a href="#Human-Traffic-of-Stadium" class="headerlink" title="Human Traffic of Stadium"></a>Human Traffic of Stadium</h2><p>连续达标问题：查询连续3天体育馆人数高于100的日期。</p>
+<h3 id="原题-1"><a href="#原题-1" class="headerlink" title="原题"></a>原题</h3><p>X city built a new stadium, each day many people visit it and the stats are saved as these columns: id, date, people<br>Please write a query to display the records which have 3 or more consecutive rows and the amount of people more than 100(inclusive).<br>For example, the table stadium:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">------+------------+-----------+</span></span><br><span class="line">| id   | date       | people    |</span><br><span class="line">+<span class="comment">------+------------+-----------+</span></span><br><span class="line">| 1    | 2017-01-01 | 10        |</span><br><span class="line">| 2    | 2017-01-02 | 109       |</span><br><span class="line">| 3    | 2017-01-03 | 150       |</span><br><span class="line">| 4    | 2017-01-04 | 99        |</span><br><span class="line">| 5    | 2017-01-05 | 145       |</span><br><span class="line">| 6    | 2017-01-06 | 1455      |</span><br><span class="line">| 7    | 2017-01-07 | 199       |</span><br><span class="line">| 8    | 2017-01-08 | 188       |</span><br><span class="line">+<span class="comment">------+------------+-----------+</span></span><br></pre></td></tr></table></figure>
+
+<p>For the sample data above, the output is:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">------+------------+-----------+</span></span><br><span class="line">| id   | date       | people    |</span><br><span class="line">+<span class="comment">------+------------+-----------+</span></span><br><span class="line">| 5    | 2017-01-05 | 145       |</span><br><span class="line">| 6    | 2017-01-06 | 1455      |</span><br><span class="line">| 7    | 2017-01-07 | 199       |</span><br><span class="line">| 8    | 2017-01-08 | 188       |</span><br><span class="line">+<span class="comment">------+------------+-----------+</span></span><br></pre></td></tr></table></figure>
+
+<p>Note:<br>Each day only have one row record, and the dates are increasing with id increasing.</p>
+<h3 id="答案-1"><a href="#答案-1" class="headerlink" title="答案"></a>答案</h3><p>思路是先找出人数大于100的日期，然后在这些日期附近再找数大于100的日期，保留能够形成连续3天的日期。<br>提示里说表中每一天都有一条记录，而且日期是随id递增，所以我们只需要计算id，而不是日期。<br>用子查询的方法：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> s.id, s.date, s.people </span><br><span class="line"><span class="keyword">from</span> stadium <span class="keyword">as</span> s </span><br><span class="line"><span class="keyword">where</span> s.people &gt;= <span class="number">100</span> <span class="keyword">and</span> <span class="keyword">exists</span>(<span class="keyword">select</span> <span class="string">'x'</span></span><br><span class="line">    <span class="keyword">from</span> stadium <span class="keyword">as</span> s1</span><br><span class="line">    <span class="keyword">where</span> s1.people &gt;= <span class="number">100</span></span><br><span class="line">        <span class="keyword">and</span> s1.id &gt;= s.id<span class="number">-2</span></span><br><span class="line">        <span class="keyword">and</span> s1.id &lt;= s.id+<span class="number">2</span></span><br><span class="line">        <span class="keyword">and</span> s1.id&lt;&gt;s.id</span><br><span class="line">    <span class="keyword">having</span> <span class="keyword">count</span>(s1.id) &gt; <span class="number">2</span></span><br><span class="line">        <span class="keyword">or</span> (<span class="keyword">count</span>(s1.id) = <span class="number">2</span> </span><br><span class="line">            <span class="keyword">and</span> (<span class="keyword">sum</span>(s1.id-s.id) <span class="keyword">not</span> <span class="keyword">in</span> (<span class="number">-1</span>,<span class="number">1</span>) <span class="keyword">and</span> <span class="keyword">sum</span>(<span class="keyword">abs</span>(s1.id-s.id)) &lt;&gt; <span class="number">4</span>)</span><br><span class="line">        )</span><br><span class="line">    );</span><br></pre></td></tr></table></figure>
+
+<p>在当前日期的前2天和后2天找，找到人数大于100的日期个数大于2的话，那么当前日期必定可以形成连续3天人数大于100；找到人数大于100的日期个数等于2，且这两个日期与当前日期的距离和不是1或-1，绝对距离和不是4的话，那么当前日期也是可以形成连续3天人数大于100；其他情况都不行。</p>
+<p>用<code>join</code>的方法：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> t1.*</span><br><span class="line"><span class="keyword">from</span> stadium t1, stadium t2, stadium t3</span><br><span class="line"><span class="keyword">where</span> t1.people &gt;= <span class="number">100</span> <span class="keyword">and</span> t2.people &gt;= <span class="number">100</span> <span class="keyword">and</span> t3.people &gt;= <span class="number">100</span></span><br><span class="line">    <span class="keyword">and</span> ( (t1.id - t2.id = <span class="number">1</span> <span class="keyword">and</span> t1.id - t3.id = <span class="number">2</span> <span class="keyword">and</span> t2.id - t3.id =<span class="number">1</span>) <span class="comment">-- t1, t2, t3</span></span><br><span class="line">        <span class="keyword">or</span> (t2.id - t1.id = <span class="number">1</span> <span class="keyword">and</span> t2.id - t3.id = <span class="number">2</span> <span class="keyword">and</span> t1.id - t3.id =<span class="number">1</span>) <span class="comment">-- t2, t1, t3</span></span><br><span class="line">        <span class="keyword">or</span> (t3.id - t2.id = <span class="number">1</span> <span class="keyword">and</span> t2.id - t1.id =<span class="number">1</span> <span class="keyword">and</span> t3.id - t1.id = <span class="number">2</span>) <span class="comment">-- t3, t2, t1</span></span><br><span class="line">    )</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> t1.id;</span><br></pre></td></tr></table></figure>
+
+<p>同样，上面的子查询方法依然比这个join方法效率高。</p>
+<h2 id="Trips-and-Users"><a href="#Trips-and-Users" class="headerlink" title="Trips and Users"></a>Trips and Users</h2><h3 id="原题-2"><a href="#原题-2" class="headerlink" title="原题"></a>原题</h3><p>用户取消叫车服务问题：统计一个时间段内每天用户取消叫车服务占所有叫车服务的比例。<br>The Trips table holds all taxi trips. Each trip has a unique Id, while Client_Id and Driver_Id are both foreign keys to the Users_Id at the Users table. Status is an ENUM type of (‘completed’, ‘cancelled_by_driver’, ‘cancelled_by_client’).</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">----+-----------+-----------+---------+--------------------+----------+</span></span><br><span class="line">| Id | Client_Id | Driver_Id | City_Id |        Status      |Request_at|</span><br><span class="line">+<span class="comment">----+-----------+-----------+---------+--------------------+----------+</span></span><br><span class="line">| 1  |     1     |    10     |    1    |     completed      |2013-10-01|</span><br><span class="line">| 2  |     2     |    11     |    1    | cancelled_by_driver|2013-10-01|</span><br><span class="line">| 3  |     3     |    12     |    6    |     completed      |2013-10-01|</span><br><span class="line">| 4  |     4     |    13     |    6    | cancelled_by_client|2013-10-01|</span><br><span class="line">| 5  |     1     |    10     |    1    |     completed      |2013-10-02|</span><br><span class="line">| 6  |     2     |    11     |    6    |     completed      |2013-10-02|</span><br><span class="line">| 7  |     3     |    12     |    6    |     completed      |2013-10-02|</span><br><span class="line">| 8  |     2     |    12     |    12   |     completed      |2013-10-03|</span><br><span class="line">| 9  |     3     |    10     |    12   |     completed      |2013-10-03| </span><br><span class="line">| 10 |     4     |    13     |    12   | cancelled_by_driver|2013-10-03|</span><br><span class="line">+<span class="comment">----+-----------+-----------+---------+--------------------+----------+</span></span><br></pre></td></tr></table></figure>
+
+<p>The Users table holds all users. Each user has an unique Users_Id, and Role is an ENUM type of (‘client’, ‘driver’, ‘partner’).</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">----------+--------+--------+</span></span><br><span class="line">| Users_Id | Banned |  Role  |</span><br><span class="line">+<span class="comment">----------+--------+--------+</span></span><br><span class="line">|    1     |   No   | client |</span><br><span class="line">|    2     |   Yes  | client |</span><br><span class="line">|    3     |   No   | client |</span><br><span class="line">|    4     |   No   | client |</span><br><span class="line">|    10    |   No   | driver |</span><br><span class="line">|    11    |   No   | driver |</span><br><span class="line">|    12    |   No   | driver |</span><br><span class="line">|    13    |   No   | driver |</span><br><span class="line">+<span class="comment">----------+--------+--------+</span></span><br></pre></td></tr></table></figure>
+
+<p>Write a SQL query to find the cancellation rate of requests made by unbanned clients between Oct 1, 2013 and Oct 3, 2013. For the above tables, your SQL query should return the following rows with the cancellation rate being rounded to two decimal places.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">------------+-------------------+</span></span><br><span class="line">|     Day    | Cancellation Rate |</span><br><span class="line">+<span class="comment">------------+-------------------+</span></span><br><span class="line">| 2013-10-01 |       0.33        |</span><br><span class="line">| 2013-10-02 |       0.00        |</span><br><span class="line">| 2013-10-03 |       0.50        |</span><br><span class="line">+<span class="comment">------------+-------------------+</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="答案-2"><a href="#答案-2" class="headerlink" title="答案"></a>答案</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> Request_at <span class="keyword">as</span> <span class="string">"Day"</span>, <span class="keyword">round</span>(<span class="number">1</span>-<span class="keyword">sum</span>(t.Status=<span class="string">"completed"</span>)/<span class="keyword">count</span>(t.id), <span class="number">2</span>) <span class="keyword">as</span> <span class="string">"Cancellation Rate"</span></span><br><span class="line"><span class="keyword">from</span> Trips <span class="keyword">as</span> t <span class="keyword">join</span> <span class="keyword">users</span> <span class="keyword">as</span> u <span class="keyword">on</span> u.Users_Id = t.Client_Id <span class="keyword">and</span> u.Banned = <span class="string">"No"</span></span><br><span class="line"><span class="keyword">where</span> t.Request_at &gt;=<span class="string">'2013-10-01'</span> <span class="keyword">and</span> t.Request_at&lt;=<span class="string">'2013-10-03'</span></span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> t.Request_at;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Median-Employee-Salary"><a href="#Median-Employee-Salary" class="headerlink" title="Median Employee Salary"></a>Median Employee Salary</h2><h3 id="原题-3"><a href="#原题-3" class="headerlink" title="原题"></a>原题</h3><p>中位薪资问题：查询各家公司中薪资排中位的的员工（薪资）。<br>The Employee table holds all employees. The employee table has three columns: Employee Id, Company Name, and Salary.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">-----+------------+--------+</span></span><br><span class="line">|Id   | Company    | Salary |</span><br><span class="line">+<span class="comment">-----+------------+--------+</span></span><br><span class="line">|1    | A          | 2341   |</span><br><span class="line">|2    | A          | 341    |</span><br><span class="line">|3    | A          | 15     |</span><br><span class="line">|4    | A          | 15314  |</span><br><span class="line">|5    | A          | 451    |</span><br><span class="line">|6    | A          | 513    |</span><br><span class="line">|7    | B          | 15     |</span><br><span class="line">|8    | B          | 13     |</span><br><span class="line">|9    | B          | 1154   |</span><br><span class="line">|10   | B          | 1345   |</span><br><span class="line">|11   | B          | 1221   |</span><br><span class="line">|12   | B          | 234    |</span><br><span class="line">|13   | C          | 2345   |</span><br><span class="line">|14   | C          | 2645   |</span><br><span class="line">|15   | C          | 2645   |</span><br><span class="line">|16   | C          | 2652   |</span><br><span class="line">|17   | C          | 65     |</span><br><span class="line">+<span class="comment">-----+------------+--------+</span></span><br></pre></td></tr></table></figure>
+
+<p>Write a SQL query to find the median salary of each company. Bonus points if you can solve it without using any built-in SQL functions.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">-----+------------+--------+</span></span><br><span class="line">|Id   | Company    | Salary |</span><br><span class="line">+<span class="comment">-----+------------+--------+</span></span><br><span class="line">|5    | A          | 451    |</span><br><span class="line">|6    | A          | 513    |</span><br><span class="line">|12   | B          | 234    |</span><br><span class="line">|9    | B          | 1154   |</span><br><span class="line">|14   | C          | 2645   |</span><br><span class="line">+<span class="comment">-----+------------+--------+</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="答案-3"><a href="#答案-3" class="headerlink" title="答案"></a>答案</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> emp.Id, emp.Company, emp.Salary</span><br><span class="line"><span class="keyword">from</span> Employee <span class="keyword">as</span> emp</span><br><span class="line"><span class="keyword">join</span> (<span class="keyword">select</span> Company, <span class="keyword">count</span>(*) <span class="keyword">as</span> EmployeeNum <span class="keyword">from</span> Employee <span class="keyword">group</span> <span class="keyword">by</span> Company) <span class="keyword">as</span> emp1</span><br><span class="line"><span class="keyword">on</span> emp1.Company = emp.Company</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="string">'x'</span> <span class="keyword">from</span> Employee <span class="keyword">as</span> emp2</span><br><span class="line">    <span class="keyword">where</span> emp2.Company = emp.Company <span class="keyword">and</span> emp2.Salary &lt; emp.Salary</span><br><span class="line">    <span class="keyword">having</span> <span class="keyword">count</span>(emp2.Id) <span class="keyword">in</span> ( <span class="keyword">floor</span>((EmployeeNum<span class="number">-1</span>)/<span class="number">2</span>), <span class="keyword">floor</span>(EmployeeNum/<span class="number">2</span>) )</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/mysql/" rel="tag"># mysql</a>
+          
+            <a href="/blog/tags/leetcode/" rel="tag"># leetcode</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/swoole-lumen-asynchronous-mysql-query-with-synchronous-programming-style.html" rel="next" title="Swoole+Lumen：同步编程风格调用MySQL异步查询">
+                <i class="fa fa-chevron-left"></i> Swoole+Lumen：同步编程风格调用MySQL异步查询
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/mysql-run-multiple-instances-on-ubuntu.html" rel="prev" title="在Ubuntu上运行多实例MySQL">
+                在Ubuntu上运行多实例MySQL <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/blog/assets/images/Breeze.JPG" alt="林毅锋">
+            
+              <p class="site-author-name" itemprop="name">林毅锋</p>
+              <div class="site-description motion-element" itemprop="description">阿牛不说话</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/blog/archives">
+                
+                    <span class="site-state-item-count">44</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/blog/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/blog/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">35</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/breeze2" title="GitHub &rarr; https://github.com/breeze2" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:805511939@qq.com" title="E-Mail &rarr; mailto:805511939@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Department-Top-Three-Salaries"><span class="nav-number">1.</span> <span class="nav-text">Department Top Three Salaries</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原题"><span class="nav-number">1.1.</span> <span class="nav-text">原题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#答案"><span class="nav-number">1.2.</span> <span class="nav-text">答案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Human-Traffic-of-Stadium"><span class="nav-number">2.</span> <span class="nav-text">Human Traffic of Stadium</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原题-1"><span class="nav-number">2.1.</span> <span class="nav-text">原题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#答案-1"><span class="nav-number">2.2.</span> <span class="nav-text">答案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Trips-and-Users"><span class="nav-number">3.</span> <span class="nav-text">Trips and Users</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原题-2"><span class="nav-number">3.1.</span> <span class="nav-text">原题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#答案-2"><span class="nav-number">3.2.</span> <span class="nav-text">答案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Median-Employee-Salary"><span class="nav-number">4.</span> <span class="nav-text">Median Employee Salary</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原题-3"><span class="nav-number">4.1.</span> <span class="nav-text">原题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#答案-3"><span class="nav-number">4.2.</span> <span class="nav-text">答案</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">林毅锋</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/blog/js/utils.js?v=7.1.2"></script>
+
+  <script src="/blog/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/blog/js/schemes/muse.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/blog/js/scrollspy.js?v=7.1.2"></script>
+<script src="/blog/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/blog/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/blog/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
