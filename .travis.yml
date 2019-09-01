@@ -20,9 +20,11 @@ script:
   - hexo generate
 after_success:
   - cp ./public/assets/images/practice-embed-html-in-jpeg4.jpg ./public/assets/images/practice-embed-html-in-jpeg4.html
-  - cd ./public
-  - git init
-  - git checkout --orphan gh-pages
-  - git add -A
-  - git commit -m "Travis CI Auto Builder"
-  - git push --quiet --force https://$GITHUB_REPO_TOKEN@github.com/breeze2/blog gh-pages
+deploy:
+  provider: pages
+  skip_cleanup: true
+  keep_history: true
+  local_dir: ./public
+  github_token: $GITHUB_REPO_TOKEN  # Set in the settings page of your repository, as a secure variable
+  on:
+    branch: hexo
