@@ -104,14 +104,14 @@
 <meta property="og:site_name" content="Lin Blog">
 <meta property="og:description" content="平时在Windows系统上做PHP开发，都是直接使用WAMP的继承环境。最近需要用到一个PHP扩展，也没找到现成的DLL文件，于是想着自己编译一个。首先，需要安装一个Visual Studio  Visual Studio上大学的时候，老师教我们用 VC6.0 ，我就在自己电脑上装了个 Visual Studio 2010*，功能全选，占了好十几GB空间，然后就没怎么用了，看来只是想体验一下进度">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/php-compile-on-windows1.png">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/php-compile-on-windows2.png">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/php-compile-on-windows3.png">
-<meta property="og:updated_time" content="2019-09-01T14:36:53.024Z">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/php-compile-on-windows1.png">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/php-compile-on-windows2.png">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/php-compile-on-windows3.png">
+<meta property="og:updated_time" content="2019-09-01T14:46:32.855Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Windows上编译PHP">
 <meta name="twitter:description" content="平时在Windows系统上做PHP开发，都是直接使用WAMP的继承环境。最近需要用到一个PHP扩展，也没找到现成的DLL文件，于是想着自己编译一个。首先，需要安装一个Visual Studio  Visual Studio上大学的时候，老师教我们用 VC6.0 ，我就在自己电脑上装了个 Visual Studio 2010*，功能全选，占了好十几GB空间，然后就没怎么用了，看来只是想体验一下进度">
-<meta name="twitter:image" content="https://breeze2.github.io/blog/assets/images/php-compile-on-windows1.png">
+<meta name="twitter:image" content="https://breeze2.github.io/assets/images/php-compile-on-windows1.png">
 
 
 
@@ -423,7 +423,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-09-01 14:36:53" itemprop="dateModified" datetime="2019-09-01T14:36:53Z">2019-09-01</time>
+                <time title="修改时间：2019-09-01 14:46:32" itemprop="dateModified" datetime="2019-09-01T14:46:32Z">2019-09-01</time>
               
             
           </span>
@@ -479,11 +479,11 @@
 <p>平时在Windows系统上做PHP开发，都是直接使用<a href="http://www.wampserver.com/" target="_blank" rel="noopener">WAMP</a>的继承环境。最近需要用到一个PHP扩展，也没找到现成的DLL文件，于是想着自己编译一个。首先，需要安装一个<a href="https://www.visualstudio.com/" target="_blank" rel="noopener">Visual Studio</a></p>
 </blockquote>
 <h2 id="Visual-Studio"><a href="#Visual-Studio" class="headerlink" title="Visual Studio"></a>Visual Studio</h2><p>上大学的时候，老师教我们用 <em>VC6.0</em> ，我就在自己电脑上装了个 <em>Visual Studio 2010*，功能全选，占了好十几GB空间，然后就没怎么用了，看来只是想体验一下进度条的优雅。后来用上了 *Sublime</em> ，以为此生足矣，没想到今天还是要求 <em>Visual Studio 2015</em>， 不愧为天下第一IDE。</p>
-<p>安装过程略去：<br><img src="/blog/assets/images/php-compile-on-windows1.png" alt="初始化Visual Studio"></p>
+<p>安装过程略去：<br><img src="/assets/images/php-compile-on-windows1.png" alt="初始化Visual Studio"></p>
 <a id="more"></a>
 
-<p>熟悉的界面：<br><img src="/blog/assets/images/php-compile-on-windows2.png" alt="熟悉的界面"></p>
-<p>其实这里与Visual Studio IDE没有多大关系，主要是要使用它的控制台：<br><img src="/blog/assets/images/php-compile-on-windows3.png" alt="VC2015 x64 CMD"></p>
+<p>熟悉的界面：<br><img src="/assets/images/php-compile-on-windows2.png" alt="熟悉的界面"></p>
+<p>其实这里与Visual Studio IDE没有多大关系，主要是要使用它的控制台：<br><img src="/assets/images/php-compile-on-windows3.png" alt="VC2015 x64 CMD"></p>
 <h2 id="PHP-SDK"><a href="#PHP-SDK" class="headerlink" title="PHP SDK"></a>PHP SDK</h2><p><a href="http://windows.php.net" target="_blank" rel="noopener">PHP For Windows</a>，是一个PHP官方提供Windows系统支持的网站。这里可以找到，已经编译好的、可以在Windows系统上直接运行的<a href="http://windows.php.net/download/" target="_blank" rel="noopener">PHP</a>，PECL上各种PHP扩展的<a href="http://windows.php.net/downloads/pecl/releases/" target="_blank" rel="noopener">DLL文件</a>，还有在Windows系统上编译PHP时需要用到的一些<a href="http://windows.php.net/downloads/php-sdk/" target="_blank" rel="noopener">工具</a>。</p>
 <p>在Windows系统上编译PHP，需要准备以下材料：</p>
 <ul>

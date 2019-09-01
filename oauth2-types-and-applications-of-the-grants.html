@@ -104,15 +104,15 @@
 <meta property="og:site_name" content="Lin Blog">
 <meta property="og:description" content="OAuth（开放授权）是一个标准协议，为用户资源的鉴权问题提供了一个安全、开放而又简易的解决方案。OAuth 2.0定义了四种鉴权模式：  授权码准许（Authorization Code Grant） 隐式准许（Implicit Grant） 客户端准许（Client Credentials Grant） 密码准许（Resource Owner Password Credentials Gr">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/oauth2-types-and-applications-of-the-grants1.png">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/oauth2-types-and-applications-of-the-grants2.png">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/oauth2-types-and-applications-of-the-grants3.png">
-<meta property="og:image" content="https://breeze2.github.io/blog/assets/images/oauth2-types-and-applications-of-the-grants4.png">
-<meta property="og:updated_time" content="2019-09-01T14:36:53.024Z">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/oauth2-types-and-applications-of-the-grants1.png">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/oauth2-types-and-applications-of-the-grants2.png">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/oauth2-types-and-applications-of-the-grants3.png">
+<meta property="og:image" content="https://breeze2.github.io/assets/images/oauth2-types-and-applications-of-the-grants4.png">
+<meta property="og:updated_time" content="2019-09-01T14:46:32.855Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OAuth2.0的授权模式和应用">
 <meta name="twitter:description" content="OAuth（开放授权）是一个标准协议，为用户资源的鉴权问题提供了一个安全、开放而又简易的解决方案。OAuth 2.0定义了四种鉴权模式：  授权码准许（Authorization Code Grant） 隐式准许（Implicit Grant） 客户端准许（Client Credentials Grant） 密码准许（Resource Owner Password Credentials Gr">
-<meta name="twitter:image" content="https://breeze2.github.io/blog/assets/images/oauth2-types-and-applications-of-the-grants1.png">
+<meta name="twitter:image" content="https://breeze2.github.io/assets/images/oauth2-types-and-applications-of-the-grants1.png">
 
 
 
@@ -424,7 +424,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-09-01 14:36:53" itemprop="dateModified" datetime="2019-09-01T14:36:53Z">2019-09-01</time>
+                <time title="修改时间：2019-09-01 14:46:32" itemprop="dateModified" datetime="2019-09-01T14:46:32Z">2019-09-01</time>
               
             
           </span>
@@ -495,7 +495,7 @@
 <li>用户同意授权，鉴权服务器带着授权码code跳转到原本指定的第三方应用回调链接；</li>
 <li>第三方应用用授权码和client_secret等参数跟鉴权服务器换取令牌。</li>
 </ol>
-<p><img src="/blog/assets/images/oauth2-types-and-applications-of-the-grants1.png" alt="授权码准许"></p>
+<p><img src="/assets/images/oauth2-types-and-applications-of-the-grants1.png" alt="授权码准许"></p>
 <p>注释：</p>
 <ol>
 <li><p>链接跳转a形式一般是（<code>$</code>开头表示是变量）：<br> <code>https://server.com/oauth/authorize?client_id=$CLIENT_ID&amp;response_type=code&amp;redirect_uri=$REDIRECT_URI&amp;scope=$SCOPE&amp;state=$STATE</code>；</p>
@@ -516,7 +516,7 @@
 <li>第三方应用要申请令牌，首先带着client_id等参数跳转到鉴权服务器鉴权链接，用户在鉴权服务器上选择是否同意授权于第三方应用（用户要先在鉴权服务器上登录）；</li>
 <li>用户同意授权，鉴权服务器带着令牌等参数跳转到原本指定的第三方应用回调链接。</li>
 </ol>
-<p><img src="/blog/assets/images/oauth2-types-and-applications-of-the-grants2.png" alt="隐式准许"></p>
+<p><img src="/assets/images/oauth2-types-and-applications-of-the-grants2.png" alt="隐式准许"></p>
 <p>注释：</p>
 <ol>
 <li>链接跳转a形式一般是（<code>$</code>开头表示是变量）：<br> <code>https://server.com/oauth/authorize?client_id=$CLIENT_ID&amp;response_type=code&amp;redirect_uri=$REDIRECT_URI&amp;scope=$SCOPE&amp;state=$STATE</code>；</li>
@@ -530,7 +530,7 @@
 <li>第三方应用用client_id和client_secret等参数向鉴权服务器申请令牌；</li>
 <li>鉴权服务器给第三方应用发放令牌。</li>
 </ol>
-<p><img src="/blog/assets/images/oauth2-types-and-applications-of-the-grants3.png" alt="客户端准许"></p>
+<p><img src="/assets/images/oauth2-types-and-applications-of-the-grants3.png" alt="客户端准许"></p>
 <p>注释：</p>
 <ol>
 <li><p>申请令牌时，post请求链接一般是：<code>https://server.com/oauth/token</code>，参数形式：</p>
@@ -547,7 +547,7 @@
 <li>用户在第三方应用上输入自己的用户名和密码，第三方应用据此向鉴权服务器申请令牌；</li>
 <li>鉴权服务器给第三方应用发放令牌。</li>
 </ol>
-<p><img src="/blog/assets/images/oauth2-types-and-applications-of-the-grants4.png" alt="密码准许"></p>
+<p><img src="/assets/images/oauth2-types-and-applications-of-the-grants4.png" alt="密码准许"></p>
 <p>注释：</p>
 <ol>
 <li><p>申请令牌时，post请求链接一般是：<code>https://server.com/oauth/token</code>，参数形式：</p>
