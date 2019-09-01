@@ -11,7 +11,7 @@ cache:
 before_install:
   - npm install -g hexo-cli
 install:
-  - npm i
+  - yarn install
 script:
   - cp ./_theme_config.yml ./themes/next/_config.yml
   - hexo clean
