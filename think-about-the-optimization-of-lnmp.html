@@ -15,7 +15,7 @@
 
 
 <html class="theme-next muse use-motion" lang="zh-CN">
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
@@ -104,14 +104,14 @@
 <meta property="og:site_name" content="Lin Blog">
 <meta property="og:description" content="线上有一个用LNMP构架的网站，有一天看到它出现了“502 Bad Gateway”错误，于是就开始思考优化问题了。首先，明确一下HTTP各个状态码的含义：  1XX 临时消息 2XX 返回成功 3XX 重新定向 4XX 客户端错误 5XX 服务端错误  基于LNMP的网站上，当HTTP请求返回的状态码是5XX的时候，说明是服务端出了问题；但问题不一定是出在NginX，因为NginX本身十分轻量，">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta property="og:updated_time" content="2019-09-01T13:54:49.660Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="关于LNMP的优化">
 <meta name="twitter:description" content="线上有一个用LNMP构架的网站，有一天看到它出现了“502 Bad Gateway”错误，于是就开始思考优化问题了。首先，明确一下HTTP各个状态码的含义：  1XX 临时消息 2XX 返回成功 3XX 重新定向 4XX 客户端错误 5XX 服务端错误  基于LNMP的网站上，当HTTP请求返回的状态码是5XX的时候，说明是服务端出了问题；但问题不一定是出在NginX，因为NginX本身十分轻量，">
 
 
 
-  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+  <link rel="alternate" href="https://breeze2.github.io/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
 
 
 
@@ -419,7 +419,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+                <time title="修改时间：2019-09-01 13:54:49" itemprop="dateModified" datetime="2019-09-01T13:54:49Z">2019-09-01</time>
               
             
           </span>
@@ -494,8 +494,7 @@
 <h2 id="NginX的配置优化"><a href="#NginX的配置优化" class="headerlink" title="NginX的配置优化"></a>NginX的配置优化</h2><p>大致配置如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># /etc/nginx/nginx.conf</span><br><span class="line"></span><br><span class="line">user www-data; # 指定用户</span><br><span class="line">worker_processes 8; # woker进程数，一般设置为CPU核数*线程数</span><br><span class="line">worker_cpu_affinity 00000001 00000010 00000100 00001000 00010000 00100000</span><br><span class="line">01000000 10000000; # 为每个进程分配到指定的CPU，配合worker_processes使用</span><br><span class="line">worker_rlimit_nofile 204800; # 每个woker能打开的最多文件描述符数目</span><br><span class="line">pid /run/nginx.pid; # 进程号存放位置</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">    use epoll; # 设置用于复用客户端线程的轮询方法</span><br><span class="line">    worker_connections 204800; # 每个woker的最多连接数目，不要大于worker_rlimit_nofile</span><br><span class="line">    multi_accept on; # 启用收到一个新连接通知后接受尽可能多的连接</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">    keepalive_timeout 30; #</span><br><span class="line">    server &#123;</span><br><span class="line">        listen 80 backlog=204800; #</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>实际上NginX的<code>worker_connections</code>参数会受到系统的<code>net.core.somaxconn</code>参数限制，而<code>net.core.somaxconn</code>参数也是有限制的（可以用<code>ulimit -Hn</code>命令查看），理论上<code>worker_connections</code>应该设为<code>net.core.somaxconn</code>除以<code>worker_processes</code>。
-在配合PHP-FPM使用的时候，如果想NginX支持1000并发请求，那么<code>worker_connections</code>取值不能低于2000，因为每个请求里，NginX与客户端需要一个连接，与PHP-FPM也需要一个连接。</p>
+<p>实际上NginX的<code>worker_connections</code>参数会受到系统的<code>net.core.somaxconn</code>参数限制，而<code>net.core.somaxconn</code>参数也是有限制的（可以用<code>ulimit -Hn</code>命令查看），理论上<code>worker_connections</code>应该设为<code>net.core.somaxconn</code>除以<code>worker_processes</code>。<br>在配合PHP-FPM使用的时候，如果想NginX支持1000并发请求，那么<code>worker_connections</code>取值不能低于2000，因为每个请求里，NginX与客户端需要一个连接，与PHP-FPM也需要一个连接。</p>
 <h2 id="PHP-FPM的配置优化"><a href="#PHP-FPM的配置优化" class="headerlink" title="PHP-FPM的配置优化"></a>PHP-FPM的配置优化</h2><h3 id="Unix-socket-VS-TCP-socket"><a href="#Unix-socket-VS-TCP-socket" class="headerlink" title="Unix socket VS TCP socket"></a>Unix socket VS TCP socket</h3><p>PHP-FPM提供两种通信方式与NginX对接数据，一种是Unix socket，另一种是TCP socket。<br>Unix socket是同一操作系统上的两个或多个进程进行数据通信的编程接口，这种通信方式是发生在系统内核里而不会在网络里传播；TCP socket则是基于TCP/IP协议，进程间的通信是通过网络传输的，可以跨系统、跨主机。<br>两者相较之下，Unix socket更低层，执行效率更高；而TCP socket封装性更高，安全性更好。如果NginX和PHP-FPM不在同一主机上，那么只能选择TCP socket；否则，建议考虑Unix socket。</p>
 <h3 id="最大进程数"><a href="#最大进程数" class="headerlink" title="最大进程数"></a>最大进程数</h3><p>假设一个PHP-FPM进程占用10MB内存，且打算分配1GB内存给PHP-FPM用，那么PHP-FPM的<code>pm.pm.max_children</code>可以设为100。当然，实际的每个PHP-FPM进程平均所需内存要根据实际情况计算。<br>但PHP-FPM进程多不一定有用，有用是指PHP-FPM与NginX之间有连接，而连接数也是受到系统的<code>net.core.somaxconn</code>参数限制（连接数不是进程数，一个进程可以处理多个连接）。</p>
 <h2 id="MySQL的配置优化"><a href="#MySQL的配置优化" class="headerlink" title="MySQL的配置优化"></a>MySQL的配置优化</h2><h3 id="最大连接数"><a href="#最大连接数" class="headerlink" title="最大连接数"></a>最大连接数</h3><p>首先，与NginX、PHP-FPM不同，MySQL是多线程方式工作。一般MySQ处理连接的方式（<code>thread_handling</code>）有每个连接一个线程（<code>one-connection-per-thread</code>）和所有连接一个线程（<code>no-threads</code>）。<br><code>no-threads</code>模式大多用在调试，而正式线上环境普遍采用的是<code>one-connection-per-thread</code>模式。</p>
@@ -794,7 +793,7 @@
 
           
             <div class="feed-link motion-element">
-              <a href="/blog/atom.xml" rel="alternate">
+              <a href="https://breeze2.github.io/blog/atom.xml" rel="alternate">
                 <i class="fa fa-rss"></i>
                 RSS
               </a>
@@ -888,7 +887,7 @@
 </div>
 
 
-  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
 
 
 

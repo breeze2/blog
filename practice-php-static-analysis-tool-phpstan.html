@@ -15,7 +15,7 @@
 
 
 <html class="theme-next muse use-motion" lang="zh-CN">
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
@@ -106,7 +106,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://breeze2.github.io/blog/assets/images/practice-php-static-analysis-tool-phpstan1.jpg">
 <meta property="og:image" content="https://breeze2.github.io/blog/assets/images/practice-php-static-analysis-tool-phpstan2.jpg">
-<meta property="og:updated_time" content="2019-06-02T12:42:09.534Z">
+<meta property="og:updated_time" content="2019-09-01T13:54:49.656Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="PHP代码静态分析工具PHPStan">
 <meta name="twitter:description" content="最近发现自己写的PHP代码运行结果总跟自己预想的不一样，排查时发现大多是语法错误，在运行之前错误已经种下。可能是自己粗心大意，或者说php -l检测太简单，不过的确是有一些语法错误埋藏得太深（毕竟PHP是动态语言），那么有没有办法，在代码代码正式运行之前，把语法错误全找出来呢？  这里介绍一款PHP代码静态分析工具：PHPStan，不需要运行代码，也可以对代码进行严格的语法检测，尽量将代码运行错">
@@ -114,7 +114,7 @@
 
 
 
-  <link rel="alternate" href="/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
+  <link rel="alternate" href="https://breeze2.github.io/blog/atom.xml" title="Lin Blog" type="application/atom+xml">
 
 
 
@@ -422,7 +422,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-06-02 12:42:09" itemprop="dateModified" datetime="2019-06-02T12:42:09Z">2019-06-02</time>
+                <time title="修改时间：2019-09-01 13:54:49" itemprop="dateModified" datetime="2019-09-01T13:54:49Z">2019-09-01</time>
               
             
           </span>
@@ -506,8 +506,7 @@
 <p>比如，声明了一个变量未调用，调用了一个未声明的变量和调用了一个未定义的方法等等这样错误都会被检测出了。</p>
 <p>不过，宽松一点地来说，其实<code>$this-&gt;array()</code>方法是存在的，只是通过魔术方法<code>__call()</code>实现的。</p>
 <h2 id="PHPStan-with-Laravel"><a href="#PHPStan-with-Laravel" class="headerlink" title="PHPStan with Laravel"></a>PHPStan with Laravel</h2><p>高严格级别的PHPStan检测到调用未声明的类方法时，会报告类中方法不存在的错误，即使这个类定义了<code>__call()</code>或<code>__callStatic()</code>。</p>
-<p>很多应用框架为了优雅，大量使用了魔术方法，比如<a href="https://laravel.com/" target="_blank" rel="noopener">Laravel</a>。
-用PHPStan检测Laravel项目，自然会报告很多调用未声明类方法的错误，对于这个问题，可以借助<a href="https://github.com/barryvdh/laravel-ide-helper" target="_blank" rel="noopener">laravel-ide-helper</a>来降低误报。</p>
+<p>很多应用框架为了优雅，大量使用了魔术方法，比如<a href="https://laravel.com/" target="_blank" rel="noopener">Laravel</a>。<br>用PHPStan检测Laravel项目，自然会报告很多调用未声明类方法的错误，对于这个问题，可以借助<a href="https://github.com/barryvdh/laravel-ide-helper" target="_blank" rel="noopener">laravel-ide-helper</a>来降低误报。</p>
 <h3 id="安装laravel-ide-helper"><a href="#安装laravel-ide-helper" class="headerlink" title="安装laravel-ide-helper"></a>安装laravel-ide-helper</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /PATH/TO/LARAVEL_PROJECT</span><br><span class="line">$ composer require barryvdh/laravel-ide-helper</span><br></pre></td></tr></table></figure>
 
 <h3 id="注入LaravelIdeHelper"><a href="#注入LaravelIdeHelper" class="headerlink" title="注入LaravelIdeHelper"></a>注入LaravelIdeHelper</h3><p>编辑<code>app/Providers/AppServiceProvider.php</code>里的注册方法：</p>
@@ -772,7 +771,7 @@
 
           
             <div class="feed-link motion-element">
-              <a href="/blog/atom.xml" rel="alternate">
+              <a href="https://breeze2.github.io/blog/atom.xml" rel="alternate">
                 <i class="fa fa-rss"></i>
                 RSS
               </a>
@@ -866,7 +865,7 @@
 </div>
 
 
-  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
 
 
 
